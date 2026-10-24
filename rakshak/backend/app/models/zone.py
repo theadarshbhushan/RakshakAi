@@ -10,8 +10,14 @@ from pydantic import Field
 from pymongo import ASCENDING, IndexModel
 
 
+import secrets
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def generate_sos_token() -> str:
+    return secrets.token_urlsafe(16)
 
 
 class Zone(Document):
@@ -24,6 +30,7 @@ class Zone(Document):
     allowed_roles: List[str] = Field(default_factory=list)
     adjacent_zone_ids: List[str] = Field(default_factory=list)
     map_coords: Dict[str, Any] = Field(default_factory=dict)
+    sos_token: Optional[str] = Field(default_factory=generate_sos_token, description="Random rotatable token for student SOS QR code")
     created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
@@ -31,6 +38,7 @@ class Zone(Document):
         indexes = [
             IndexModel([("org_id", ASCENDING), ("zone_id", ASCENDING)], unique=True),
             IndexModel([("org_id", ASCENDING), ("site_id", ASCENDING)]),
+            IndexModel([("sos_token", ASCENDING)], sparse=True),
         ]
 
 

@@ -34,3 +34,5 @@ matplotlib==3.11.2
 joblib==1.6.0
 setuptools==69.5.1
 imageio-ffmpeg==0.6.0
+qrcode==8.2
+pillow>=10.0.0

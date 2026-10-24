@@ -182,6 +182,8 @@ class AuditRepository(TenantScopedRepository[AuditLog]):
         await entry.insert()
         return entry
 
+    append = record_audit
+
     async def verify_chain(self) -> Dict[str, Any]:
         """Verify the integrity of this tenant's cryptographic audit hash chain."""
         all_recs = await AuditLog.find({"org_id": self.org_id}).to_list()

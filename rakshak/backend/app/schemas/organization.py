@@ -60,6 +60,7 @@ class ZoneResponse(BaseModel):
     allowed_roles: List[str]
     adjacent_zone_ids: List[str]
     map_coords: Dict[str, Any]
+    sos_token: Optional[str] = None
     created_at: datetime
 
 

@@ -108,6 +108,10 @@ async def seed(close_when_done: bool = False) -> None:
             )
             await zone.insert()
             print(f"Created zone: {zone.name} ({zone.zone_id})")
+        elif not existing_zone.sos_token:
+            from app.models.zone import generate_sos_token
+            existing_zone.sos_token = generate_sos_token()
+            await existing_zone.save()
 
     # Cameras for Sunrise
     for cconf in rules_data.get("cameras", []):

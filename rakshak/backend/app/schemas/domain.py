@@ -17,8 +17,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 # Signal Schemas
 class SignalCreateRequest(BaseModel):
-    modality: str = Field(..., description="video | audio | access")
-    kind: str = Field(..., description="zone_intrusion | fight | line_crossing | tailgating | distress_audio | curfew_violation | restricted_access | loitering | camera_tamper")
+    modality: str = Field(..., description="video | audio | access | report")
+    kind: str = Field(..., description="zone_intrusion | fight | line_crossing | tailgating | distress_audio | curfew_violation | restricted_access | loitering | camera_tamper | student_sos")
     zone_id: str
     site_id: Optional[str] = None
     camera_id: Optional[str] = None

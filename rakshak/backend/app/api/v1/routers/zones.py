@@ -46,6 +46,7 @@ async def create_zone(payload: ZoneCreateRequest, current_user: User = Depends(g
         allowed_roles=zone.allowed_roles,
         adjacent_zone_ids=zone.adjacent_zone_ids,
         map_coords=zone.map_coords,
+        sos_token=zone.sos_token,
         created_at=zone.created_at,
     )
 
@@ -66,6 +67,7 @@ async def list_zones(current_user: User = Depends(get_current_user)):
             allowed_roles=z.allowed_roles,
             adjacent_zone_ids=z.adjacent_zone_ids,
             map_coords=z.map_coords,
+            sos_token=z.sos_token,
             created_at=z.created_at,
         )
         for z in zones
@@ -98,5 +100,6 @@ async def update_zone(zone_id: str, payload: ZoneCreateRequest, current_user: Us
         allowed_roles=zone.allowed_roles,
         adjacent_zone_ids=zone.adjacent_zone_ids,
         map_coords=zone.map_coords,
+        sos_token=zone.sos_token,
         created_at=zone.created_at,
     )

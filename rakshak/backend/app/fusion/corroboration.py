@@ -21,6 +21,7 @@ DEFAULT_WEIGHTS = {
     "video": 0.9,
     "audio": 0.8,
     "access": 0.7,
+    "report": 0.85,
 }
 
 
@@ -57,17 +58,28 @@ class FusionEngine:
     def determine_severity(self, signals: List[Signal], composite_score: float) -> str:
         """
         Severity determination rules:
-        - 1 modality & composite < 0.6 -> low
-        - 1 modality & composite >= 0.6 -> medium
+        - SOS corroborated by video or audio in same zone -> critical
+        - >= 3 modalities OR (fight AND distress_audio) -> critical
+        - SOS alone -> high (at least high)
         - 2 modalities -> high
-        - 3 modalities OR (fight AND distress_audio) -> critical
+        - 1 modality & composite >= 0.6 -> medium
+        - 1 modality & composite < 0.6 -> low
         """
         active_signals = [s for s in signals if not s.suppressed]
         modalities = set(s.modality for s in active_signals)
         kinds = set(s.kind for s in active_signals)
 
+        # SOS corroborated by video or audio in same zone within fusion window -> critical
+        if "student_sos" in kinds and ("video" in modalities or "audio" in modalities):
+            return "critical"
+
         if len(modalities) >= 3 or ("fight" in kinds and "distress_audio" in kinds):
             return "critical"
+
+        # SOS alone creates at least a high-severity incident
+        if "student_sos" in kinds:
+            return "high"
+
         if len(modalities) == 2:
             return "high"
         if len(modalities) <= 1:
@@ -89,29 +101,56 @@ class FusionEngine:
         narrative_parts: List[str] = []
         base_time: Optional[datetime] = None
 
-        for s in sorted_signals:
+        for idx, s in enumerate(sorted_signals):
             s_ts = ensure_utc(s.ts)
-            t_str = s_ts.strftime("%H:%M:%S")
+            t_str = s_ts.strftime("%H:%M")
             diff_text = ""
             if base_time is None:
                 base_time = s_ts
             else:
                 diff_s = int(abs((s_ts - base_time).total_seconds()))
-                diff_text = f" {diff_s}s later"
+                diff_text = f" {diff_s} s later"
 
-            if s.kind == "zone_intrusion":
-                narrative_parts.append(
-                    f"Person entered zone '{zone_name}' at {t_str} (score {s.score:.2f} vs threshold {s.threshold:.2f})."
-                )
-            elif s.kind == "fight":
-                narrative_parts.append(
-                    f"Physical fight detected in zone '{zone_name}' at {t_str}{diff_text} (score {s.score:.2f})."
-                )
+            if s.kind == "student_sos":
+                sos_type = s.details.get("type", "other")
+                note = s.details.get("note")
+                note_str = f" ('{note}')" if note else ""
+                if idx == 0:
+                    narrative_parts.append(
+                        f"Student SOS report ({sos_type}) from {zone_name} at {t_str}{note_str}"
+                    )
+                else:
+                    narrative_parts.append(
+                        f"corroborated by Student SOS report ({sos_type}){note_str} from {zone_name}{diff_text}"
+                    )
             elif s.kind == "distress_audio":
-                sound_label = s.details.get("label", "Distress sound")
-                narrative_parts.append(
-                    f"Corroborated by distress audio ({sound_label} {s.score:.2f}){diff_text}."
-                )
+                sound_label = s.details.get("label", "Distress sound").title()
+                if idx == 0:
+                    narrative_parts.append(
+                        f"Distress audio ({sound_label} {s.score:.2f}) detected in '{zone_name}' at {t_str}"
+                    )
+                else:
+                    narrative_parts.append(
+                        f"corroborated by distress audio ({sound_label} {s.score:.2f}){diff_text}"
+                    )
+            elif s.kind == "zone_intrusion":
+                if idx == 0:
+                    narrative_parts.append(
+                        f"Person entered zone '{zone_name}' at {t_str} (score {s.score:.2f} vs threshold {s.threshold:.2f})"
+                    )
+                else:
+                    narrative_parts.append(
+                        f"corroborated by person entering zone '{zone_name}' (score {s.score:.2f}){diff_text}"
+                    )
+            elif s.kind == "fight":
+                if idx == 0:
+                    narrative_parts.append(
+                        f"Physical fight detected in zone '{zone_name}' at {t_str} (score {s.score:.2f})"
+                    )
+                else:
+                    narrative_parts.append(
+                        f"corroborated by physical fight in zone '{zone_name}' (score {s.score:.2f}){diff_text}"
+                    )
             elif s.kind == "curfew_violation":
                 role = s.details.get("role", "resident")
                 pseudo = s.details.get("pseudo_id", "anon")
@@ -144,6 +183,19 @@ class FusionEngine:
                     f"Camera tamper detected on {cam} at {t_str}: {tamper_type} (score {s.score:.2f})."
                 )
 
+        explanation = ""
+        for i, part in enumerate(narrative_parts):
+            if i == 0:
+                explanation = part
+            elif part.startswith("corroborated"):
+                explanation += f", {part}"
+            else:
+                if not explanation.endswith("."):
+                    explanation += "."
+                explanation += f" {part}"
+        if explanation and not explanation.endswith("."):
+            explanation += "."
+
         # Query suppressed signals in the same zone around this window
         suppressed_signals = await Signal.find(
             Signal.org_id == self.org_id,
@@ -157,7 +209,6 @@ class FusionEngine:
             reason = sup.suppress_reason or "suppressed by filter"
             suppressed_parts.append(f"{sup.kind} at {sup_t} ({reason})")
 
-        explanation = " ".join(narrative_parts)
         if suppressed_parts:
             explanation += f" Suppressed signals in zone: {'; '.join(suppressed_parts)}."
 
