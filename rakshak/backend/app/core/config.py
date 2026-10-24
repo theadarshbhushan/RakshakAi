@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     HELP_KEYWORDS: bool = Field(default=False, description="Spot emergency keywords via speech model")
 
     MAX_UPLOAD_SIZE_MB: int = Field(default=200, description="Max allowed file upload size in MB")
+    SHOW_BOXES: bool = Field(default=True, description="Draw tracked person bounding boxes on visualisations")
 
     # Filesystem Paths
     RULES_DEFAULT_PATH: Path = BACKEND_DIR / "rules.default.yaml"
