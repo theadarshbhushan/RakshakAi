@@ -24,6 +24,7 @@ import {
 import { api } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
+import { UserAccountMenu } from '@/components/layout/UserAccountMenu'
 
 export const LandingPage: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore()
@@ -66,14 +67,9 @@ export const LandingPage: React.FC = () => {
             <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center text-white shadow-soft shrink-0">
               <ShieldCheck size={20} strokeWidth={2.4} />
             </div>
-            <div className="leading-none">
-              <span className="text-[18px] font-bold tracking-tight text-content-primary group-hover:text-primary transition-colors">
-                RakshakAI
-              </span>
-              <span className="block text-[10px] font-medium text-primary tracking-wide mt-0.5 font-mono uppercase">
-                Privacy-First Safety
-              </span>
-            </div>
+            <span className="text-[18px] font-bold tracking-tight text-content-primary group-hover:text-primary transition-colors">
+              RakshakAI
+            </span>
           </Link>
 
           {/* Middle: Anchor links (Desktop) */}
@@ -98,21 +94,7 @@ export const LandingPage: React.FC = () => {
           {/* Right: Auth State (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-right">
-                  <div className="w-7 h-7 rounded-full bg-primary-tint flex items-center justify-center text-primary font-bold text-[12px]">
-                    {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                  </div>
-                  <span className="text-[13px] font-medium text-content-primary truncate max-w-[140px]">
-                    {user?.full_name || user?.email}
-                  </span>
-                </div>
-                <Link to="/app">
-                  <Button variant="primary" size="sm" icon={<ArrowRight size={14} />}>
-                    Go to dashboard
-                  </Button>
-                </Link>
-              </div>
+              <UserAccountMenu stayOnPageAfterSwitch stayOnPageAfterSignOut />
             ) : (
               <div className="flex items-center gap-2">
                 <Link
@@ -183,11 +165,28 @@ export const LandingPage: React.FC = () => {
 
             <div className="pt-3 border-t border-border-divider/70 flex flex-col gap-2">
               {isAuthenticated ? (
-                <Link to="/app" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                  <Button variant="primary" size="md" className="w-full">
-                    Go to dashboard
-                  </Button>
-                </Link>
+                <>
+                  <div className="flex items-center justify-between py-1 px-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold text-[13px] flex items-center justify-center shrink-0">
+                        {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div className="truncate">
+                        <span className="text-[13px] font-medium text-content-primary block truncate">
+                          {user?.full_name || user?.email}
+                        </span>
+                        <span className="text-[11px] text-content-muted capitalize block">
+                          {user?.role || 'User'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Link to="/app" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                    <Button variant="primary" size="md" className="w-full">
+                      Go to dashboard
+                    </Button>
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">

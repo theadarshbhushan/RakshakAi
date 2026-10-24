@@ -49,14 +49,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
             <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center text-white shadow-soft shrink-0">
               <ShieldCheck size={20} strokeWidth={2.4} />
             </div>
-            <div>
-              <span className="text-[17px] font-bold tracking-tight text-content-primary block leading-none group-hover:text-primary transition-colors">
-                RakshakAI
-              </span>
-              <span className="text-[11px] font-medium text-primary tracking-wide block mt-1">
-                Privacy-First Safety
-              </span>
-            </div>
+            <span className="text-[18px] font-bold tracking-tight text-content-primary group-hover:text-primary transition-colors">
+              RakshakAI
+            </span>
           </Link>
 
           <div className="mt-3.5 pt-2 border-t border-border-divider/60">
