@@ -622,10 +622,10 @@ async def get_incident_evidence_access(
                 is_reveal_eligible = True
 
     # Identity reveal status
-    latest_id_req = await IdentityRevealRequest.find_one({
+    latest_id_req = await IdentityRevealRequest.find({
         "org_id": current_user.org_id,
         "incident_id": incident_id,
-    }).sort("-created_at")
+    }).sort("-created_at").first_or_none()
     id_status = latest_id_req.status if latest_id_req else "none"
 
     available_views = ["skeleton"]

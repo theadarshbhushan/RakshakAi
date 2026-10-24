@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 
 export interface CameraTileProps {
   camera: Camera
+  incidentId?: string
   defaultMode?: 'skeleton' | 'blurred'
   onSelect?: () => void
   onEmergencyRevealTrigger?: (cameraId: string) => void
@@ -24,12 +25,13 @@ export interface CameraTileProps {
 
 export const CameraTile: React.FC<CameraTileProps> = ({
   camera,
+  incidentId,
   defaultMode = 'skeleton',
   onSelect,
   onEmergencyRevealTrigger,
   hasActiveIntrusion = false,
 }) => {
-  const [mode, setMode] = useState<'skeleton' | 'blurred' | 'raw'>(defaultMode)
+  const [mode, setMode] = useState<'skeleton' | 'blurred'>(defaultMode)
   const [streamError, setStreamError] = useState(false)
   const [emergencyModalOpen, setEmergencyModalOpen] = useState(false)
   const [emergencyReason, setEmergencyReason] = useState('')
@@ -41,7 +43,7 @@ export const CameraTile: React.FC<CameraTileProps> = ({
 
   const streamUrl = api.cameras.getStreamUrl(
     camera.camera_id,
-    intruderUnlocked ? 'raw' : mode
+    intruderUnlocked ? 'emergency' : mode
   )
 
   const handleEmergencySubmit = async (e: React.FormEvent) => {
@@ -49,12 +51,17 @@ export const CameraTile: React.FC<CameraTileProps> = ({
     if (!emergencyReason.trim()) return
     setEmergencySubmitting(true)
     try {
-      // In live view, emergency reveal unblurs stream for 5 minutes
+      if (incidentId) {
+        await api.privacy.emergencyReveal({
+          incident_id: incidentId,
+          reason: emergencyReason,
+        })
+      }
       setIntruderUnlocked(true)
       setEmergencyModalOpen(false)
-      toast.success(`Emergency access active for ${camera.name}. Access logged for admin review.`)
+      toast.success(`Emergency intruder access active for ${camera.name}. Access logged for admin review.`)
     } catch (err: any) {
-      toast.error('Emergency access failed')
+      toast.error(err.message || 'Emergency access failed')
     } finally {
       setEmergencySubmitting(false)
     }

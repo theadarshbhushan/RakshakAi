@@ -39,18 +39,26 @@ export interface ScenarioItem {
 
 export interface EvidenceAccessInfo {
   incident_id: string
-  default_view: 'skeleton' | 'face_blurred' | 'unblurred'
-  available_views: Array<'skeleton' | 'blurred' | 'unblurred'>
-  skeleton_available: boolean
-  blurred_available: boolean
-  unblurred_available: boolean
-  blurred_locked: boolean
-  unblurred_locked: boolean
+  user_role?: string
+  default_view: 'skeleton' | 'blurred'
+  available_views: Array<'skeleton' | 'blurred' | 'raw'>
+  locked_views: Array<'blurred' | 'raw'>
+  emergency_context_eligible: boolean
+  emergency_reveal_eligible: boolean
+  identity_reveal_status: 'none' | 'pending' | 'approved' | 'denied'
+  active_grants: {
+    breakglass: boolean
+    emergency_reveal: boolean
+    identity_reveal: boolean
+  }
+  // Optional convenience fields
+  skeleton_available?: boolean
+  blurred_available?: boolean
+  unblurred_available?: boolean
+  blurred_locked?: boolean
+  unblurred_locked?: boolean
   blurred_grant_expires_at?: string | null
   unblurred_grant_expires_at?: string | null
   emergency_context_available?: boolean
-  emergency_reveal_eligible?: boolean
-  pending_identity_reveal_id?: string | null
-  can_request_unblurred?: boolean
-  intruder_identified_reason?: string | null
 }
+

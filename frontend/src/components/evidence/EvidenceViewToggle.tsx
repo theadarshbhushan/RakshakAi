@@ -80,21 +80,27 @@ export const EvidenceViewToggle: React.FC<EvidenceViewToggleProps> = ({
   const [emergencyIntruderActive, setEmergencyIntruderActive] = useState(false)
   const [emergencyIntruderRemaining, setEmergencyIntruderRemaining] = useState<number | null>(null)
 
+  const [breakglassToken, setBreakglassToken] = useState<string | null>(null)
+
   // Permissions logic
   const isAuditor = role === 'auditor'
   const isGuard = role === 'guard'
   const isOwner = role === 'owner'
 
   // Can access blurred:
-  // If hostel default is face_blurred, or breakglass active, or emergency context
-  const isBlurredLocked =
-    accessInfo?.blurred_locked &&
-    !accessInfo.emergency_context_available &&
-    !breakglassRemaining
+  // If org default is blurred, or active breakglass, or emergency context eligible
+  const hasBreakglass = Boolean(breakglassRemaining || accessInfo?.active_grants?.breakglass)
+  const hasEmergencyContext = Boolean(accessInfo?.emergency_context_eligible || accessInfo?.emergency_context_available)
+  const isDefaultBlurred = accessInfo?.default_view === 'blurred'
 
-  // Unblurred access
-  const isUnblurredLocked =
-    accessInfo?.unblurred_locked && !revealRemaining
+  const isBlurredLocked = !isDefaultBlurred && !hasBreakglass && !hasEmergencyContext && (accessInfo?.locked_views?.includes('blurred') ?? true)
+
+  // Unblurred (Raw) access:
+  // Only available if identity reveal approved or emergency reveal active
+  const hasIdentityReveal = Boolean(revealRemaining || accessInfo?.active_grants?.identity_reveal)
+  const hasEmergencyReveal = Boolean(emergencyIntruderActive || emergencyIntruderRemaining || accessInfo?.active_grants?.emergency_reveal)
+
+  const isUnblurredLocked = !hasIdentityReveal && !hasEmergencyReveal && (accessInfo?.locked_views?.includes('raw') ?? true)
 
   const handleSelectTier = (tier: ViewTier) => {
     if (tier === 'skeleton') {
@@ -103,11 +109,11 @@ export const EvidenceViewToggle: React.FC<EvidenceViewToggleProps> = ({
     }
 
     if (tier === 'blurred') {
+      if (isAuditor) {
+        toast.error('Auditors are restricted to skeleton privacy view.')
+        return
+      }
       if (isBlurredLocked) {
-        if (isAuditor) {
-          toast.error('Auditors are restricted to skeleton privacy view.')
-          return
-        }
         setBreakglassModalOpen(true)
       } else {
         onViewChange('blurred')
@@ -117,7 +123,7 @@ export const EvidenceViewToggle: React.FC<EvidenceViewToggleProps> = ({
 
     if (tier === 'unblurred') {
       if (isAuditor || isGuard) {
-        toast.error('Only wardens, administrators and owners can request identity reveals.')
+        toast.error('Guards and auditors are restricted from full unblurred view.')
         return
       }
       if (isUnblurredLocked) {
@@ -223,7 +229,7 @@ export const EvidenceViewToggle: React.FC<EvidenceViewToggleProps> = ({
   return (
     <div className="space-y-3">
       {/* Emergency Context Banner (Yellow) */}
-      {accessInfo?.emergency_context_available && (
+      {(accessInfo?.emergency_context_eligible || accessInfo?.emergency_context_available) && (
         <div className="p-3 bg-status-high-tint border border-status-high/30 rounded-card flex items-center justify-between text-[13px] text-status-high">
           <div className="flex items-center gap-2">
             <AlertTriangle size={16} className="shrink-0" />
@@ -234,6 +240,19 @@ export const EvidenceViewToggle: React.FC<EvidenceViewToggleProps> = ({
           <span className="font-mono text-[12px] bg-card px-2 py-0.5 rounded shadow-soft">
             10-min active
           </span>
+        </div>
+      )}
+
+      {/* Identity Reveal Pending Status Banner */}
+      {accessInfo?.identity_reveal_status === 'pending' && (
+        <div className="p-3 bg-fill-subtle border border-border-card rounded-card flex items-center justify-between text-[13px] text-content-body">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-status-medium shrink-0" />
+            <span>Identity reveal requested: Awaiting review by second administrator in Approvals inbox.</span>
+          </div>
+          <a href="/approvals" className="text-primary hover:underline font-medium text-[12px]">
+            Approvals inbox &rarr;
+          </a>
         </div>
       )}
 

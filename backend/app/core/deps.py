@@ -4,7 +4,7 @@ FastAPI dependencies for authentication, multi-tenancy, RBAC, and machine API ke
 from typing import Any, Dict, Optional
 
 from beanie import PydanticObjectId
-from fastapi import Depends, Header
+from fastapi import Depends, Header, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 
 from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
@@ -18,15 +18,26 @@ http_bearer = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
+    request: Request,
     token: Optional[str] = Depends(oauth2_scheme),
     bearer: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
 ) -> User:
     """
     Validate bearer JWT token and return active User document.
-    Supports either OAuth2 password flow token or HTTPBearer authorization header.
+    Supports either OAuth2 password flow token, HTTPBearer authorization header,
+    auth_token query parameter, or access_token cookie (for media tags).
     Enforces token_version check, active status, and tenant binding.
     """
-    auth_token = token or (bearer.credentials if bearer else None)
+    q_token = request.query_params.get("auth_token")
+    if not q_token:
+        # If token is in query params and contains JWT dots, allow it
+        raw_token = request.query_params.get("token")
+        if raw_token and "." in raw_token:
+            q_token = raw_token
+
+    cookie_token = request.cookies.get("access_token")
+
+    auth_token = token or (bearer.credentials if bearer else None) or q_token or cookie_token
     if not auth_token:
         raise UnauthorizedError("Missing authentication token", code="AUTH_MISSING_TOKEN")
 

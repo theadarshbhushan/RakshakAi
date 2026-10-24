@@ -246,7 +246,7 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
-    getStreamUrl: (cameraId: string, mode: 'skeleton' | 'blurred' | 'raw' = 'skeleton') => {
+    getStreamUrl: (cameraId: string, mode: 'skeleton' | 'blurred' | 'emergency' = 'skeleton') => {
       const token = getAccessToken()
       return `/api/v1/stream/${cameraId}?mode=${mode}${token ? `&token=${encodeURIComponent(token)}` : ''}`
     },
@@ -269,7 +269,7 @@ export const api = {
       }),
     reset: (includeHistory: boolean = false) =>
       apiFetch<{ message: string; deleted_incidents: number; deleted_signals: number }>(
-        '/api/v1/scenarios/reset',
+        `/api/v1/scenarios/reset`,
         {
           method: 'POST',
           params: { include_history: includeHistory },
@@ -291,9 +291,13 @@ export const api = {
       apiFetch<{ message: string }>(`/api/v1/analyze/jobs/${jobId}`, {
         method: 'DELETE',
       }),
-    getAnnotatedUrl: (jobId: string, mode: 'skeleton' | 'blurred' = 'skeleton') => {
-      const token = getAccessToken()
-      return `/api/v1/analyze/jobs/${jobId}/annotated?mode=${mode}${token ? `&token=${encodeURIComponent(token)}` : ''}`
+    getAnnotatedUrl: (jobId: string, mode: 'skeleton' | 'blurred' = 'skeleton', token?: string) => {
+      const accessToken = getAccessToken()
+      const searchParams = new URLSearchParams()
+      searchParams.append('mode', mode)
+      if (token) searchParams.append('token', token)
+      if (accessToken) searchParams.append('auth_token', accessToken)
+      return `/api/v1/analyze/jobs/${jobId}/annotated?${searchParams.toString()}`
     },
     startLive: (data: { camera_id: string; rtmp_url?: string }) =>
       apiFetch<{ message: string; camera_id: string }>('/api/v1/analyze/live', {
@@ -312,6 +316,19 @@ export const api = {
       apiFetch<EvidenceAccessInfo>(`/api/v1/evidence/incident/${incidentId}/access`),
     getEvidence: (incidentId: string) =>
       apiFetch<any>(`/api/v1/evidence/incident/${incidentId}`),
+    getVideoUrl: (
+      incidentId: string,
+      options: { tier?: 'skeleton' | 'blurred' | 'raw'; variant?: 'targeted' | 'full'; token?: string } = {}
+    ) => {
+      const { tier = 'skeleton', variant = 'targeted', token } = options
+      const accessToken = getAccessToken()
+      const searchParams = new URLSearchParams()
+      if (tier) searchParams.append('tier', tier)
+      if (variant) searchParams.append('variant', variant)
+      if (token) searchParams.append('token', token)
+      if (accessToken) searchParams.append('auth_token', accessToken)
+      return `/api/v1/evidence/incident/${incidentId}?${searchParams.toString()}`
+    },
     exportPolice: (incidentId: string) =>
       apiFetch<{ download_url?: string; chain_of_custody_hash: string; message: string }>(
         `/api/v1/evidence/incident/${incidentId}/export`,
@@ -320,13 +337,13 @@ export const api = {
   },
 
   privacy: {
-    breakglass: (data: { incident_id: string; reason: string }) =>
+    breakglass: (data: { incident_id?: string; job_id?: string; reason: string }) =>
       apiFetch<BreakglassResponse>('/api/v1/privacy/breakglass', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     requestIdentityReveal: (data: { incident_id: string; reason: string }) =>
-      apiFetch<{ request_id: string; status: string; message: string }>(
+      apiFetch<{ id: string; incident_id: string; status: string; message: string }>(
         '/api/v1/privacy/identity-reveal',
         {
           method: 'POST',
@@ -337,32 +354,39 @@ export const api = {
       apiFetch<any[]>('/api/v1/privacy/identity-reveal', {
         params: { status },
       }),
-    approveIdentityReveal: (requestId: string, notes?: string) =>
+    approveIdentityReveal: (requestId: string, note?: string) =>
       apiFetch<any>(`/api/v1/privacy/identity-reveal/${requestId}/approve`, {
         method: 'POST',
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ note }),
       }),
-    denyIdentityReveal: (requestId: string, notes?: string) =>
+    denyIdentityReveal: (requestId: string, note?: string) =>
       apiFetch<any>(`/api/v1/privacy/identity-reveal/${requestId}/deny`, {
         method: 'POST',
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ note }),
       }),
     emergencyReveal: (data: { incident_id: string; reason: string }) =>
-      apiFetch<any>('/api/v1/privacy/emergency-reveal', {
+      apiFetch<{
+        id: string
+        incident_id: string
+        expires_at: string
+        flagged_track_ids: string[]
+        review_status: string
+        message: string
+      }>('/api/v1/privacy/emergency-reveal', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    listEmergencyReveals: (reviewed?: boolean) =>
+    listEmergencyReveals: (review?: string) =>
       apiFetch<any[]>('/api/v1/privacy/emergency-reveal', {
-        params: { reviewed },
+        params: { review },
       }),
-    reviewEmergencyReveal: (revealId: string, data: { justified: boolean; notes: string }) =>
+    reviewEmergencyReveal: (revealId: string, data: { status: 'justified' | 'not_justified'; note: string }) =>
       apiFetch<any>(`/api/v1/privacy/emergency-reveal/${revealId}/review`, {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     getSettings: () => apiFetch<any>('/api/v1/privacy/settings'),
-    updateSettings: (data: any) =>
+    updateSettings: (data: { default_evidence_view?: 'skeleton' | 'blurred'; retention_days?: number; retention_days_confirmed?: number }) =>
       apiFetch<any>('/api/v1/privacy/settings', {
         method: 'PUT',
         body: JSON.stringify(data),

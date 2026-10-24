@@ -58,10 +58,10 @@ export const PrivacyAuditPage: React.FC = () => {
     refetchInterval: 15000,
   })
 
-  // Fetch Emergency Reveals to Review
+  // Fetch Emergency Reveals to Review (pending only)
   const { data: emergencyReveals = [], refetch: refetchEmergency } = useQuery({
     queryKey: ['privacy_emergency_reveals'],
-    queryFn: () => api.privacy.listEmergencyReveals(false),
+    queryFn: () => api.privacy.listEmergencyReveals('pending'),
   })
 
   // Verify Audit Integrity Mutation
@@ -85,7 +85,7 @@ export const PrivacyAuditPage: React.FC = () => {
 
   // Update Default View Setting Mutation
   const updateSettingsMutation = useMutation({
-    mutationFn: (newDefault: 'skeleton' | 'face_blurred') =>
+    mutationFn: (newDefault: 'skeleton' | 'blurred') =>
       api.privacy.updateSettings({ default_evidence_view: newDefault }),
     onSuccess: (_, newDefault) => {
       toast.success('Default evidence view updated. This change is logged in the audit ledger.', {
@@ -131,8 +131,8 @@ export const PrivacyAuditPage: React.FC = () => {
       await api.privacy.reviewEmergencyReveal(
         selectedEmergencyReveal.id || selectedEmergencyReveal.reveal_id,
         {
-          justified: emergencyReviewJustified,
-          notes: emergencyReviewNotes,
+          status: emergencyReviewJustified ? 'justified' : 'not_justified',
+          note: emergencyReviewNotes || (emergencyReviewJustified ? 'Justified by admin' : 'Not justified'),
         }
       )
       toast.success(
@@ -215,9 +215,9 @@ export const PrivacyAuditPage: React.FC = () => {
 
           {/* Face-blurred Option */}
           <div
-            onClick={() => isOwnerOrAdmin && updateSettingsMutation.mutate('face_blurred')}
+            onClick={() => isOwnerOrAdmin && updateSettingsMutation.mutate('blurred')}
             className={`p-4 rounded-card border transition-all cursor-pointer ${
-              currentDefaultView === 'face_blurred'
+              currentDefaultView === 'blurred'
                 ? 'border-primary bg-primary-tint/25 shadow-soft ring-1 ring-primary'
                 : 'border-border-card bg-card hover:bg-fill-subtle'
             } ${!isOwnerOrAdmin ? 'cursor-not-allowed opacity-80' : ''}`}
@@ -227,7 +227,7 @@ export const PrivacyAuditPage: React.FC = () => {
                 <Eye size={16} className="text-primary" />
                 Face-blurred footage (Contextual)
               </span>
-              {currentDefaultView === 'face_blurred' && (
+              {currentDefaultView === 'blurred' && (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-primary text-white">
                   Active default
                 </span>

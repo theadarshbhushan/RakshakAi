@@ -347,74 +347,100 @@ export const IncidentDetailPage: React.FC = () => {
               cameraName="Terrace North Camera"
             />
 
-            {/* Simulated Annotated Video Player */}
+            {/* Simulated & Real Annotated Video Player */}
             <div className="relative aspect-video bg-video-bg rounded-card overflow-hidden flex items-center justify-center border border-border-card">
-              {currentView === 'skeleton' ? (
-                /* Skeleton Mode */
-                <div className="w-full h-full flex flex-col items-center justify-center p-6 relative">
-                  <svg
-                    className="w-32 h-40 opacity-90"
-                    viewBox="0 0 100 120"
-                    fill="none"
-                    stroke="#EDEBE6"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="50" cy="20" r="10" stroke="#EDEBE6" strokeWidth="2.5" />
-                    <line x1="50" y1="30" x2="50" y2="65" />
-                    <line x1="50" y1="42" x2="30" y2="55" />
-                    <line x1="30" y1="55" x2="22" y2="70" />
-                    <line x1="50" y1="42" x2="70" y2="55" />
-                    <line x1="70" y1="55" x2="78" y2="70" />
-                    <line x1="50" y1="65" x2="35" y2="90" />
-                    <line x1="35" y1="90" x2="30" y2="115" />
-                    <line x1="50" y1="65" x2="65" y2="90" />
-                    <line x1="65" y1="90" x2="70" y2="115" />
-                  </svg>
-                  {/* Active person bounding box */}
-                  <div className="absolute inset-12 border-2 border-video-alertBox/90 rounded pointer-events-none flex items-start justify-between p-2">
-                    <span className="bg-video-alertBox text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
-                      ID: P-04 (curfew violation)
-                    </span>
-                    <span className="text-[11px] text-[#EDEBE6] font-mono">
-                      23:38:12
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-mono text-[#B9B7B1] mt-2">
-                    SKELETON STREAM · TRACK #104
-                  </span>
-                </div>
-              ) : currentView === 'blurred' ? (
-                /* Face Blurred Mode */
-                <div className="w-full h-full bg-[#2C2E33] flex flex-col items-center justify-center p-6 relative">
-                  <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-2">
-                    <span className="text-[11px] text-white/80 font-mono">[FACE BLURRED]</span>
-                  </div>
-                  <span className="text-[12px] text-[#EDEBE6] font-medium">
-                    Footage preview with privacy filter active
-                  </span>
-                  <span className="text-[11px] text-[#B9B7B1] mt-1">
-                    10-minute temporary breakglass session
-                  </span>
-                </div>
-              ) : (
-                /* Unblurred Authorized Mode with Watermark */
-                <div className="w-full h-full bg-[#18191D] flex flex-col items-center justify-center p-6 relative">
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 rotate-[-15deg]">
-                    <span className="text-[28px] font-mono text-white tracking-widest font-bold">
-                      {user?.email || 'RAKSHAK-AI AUDITED'}
-                    </span>
-                  </div>
-                  <ShieldCheck size={40} className="text-status-healthy mb-2" />
-                  <span className="text-[13px] text-white font-medium">
-                    Full unblurred identity footage active
-                  </span>
-                  <span className="text-[11px] text-[#B9B7B1] mt-1 font-mono">
-                    Watermarked & logged to immutable audit ledger
+              {/* Real backend video stream */}
+              <video
+                key={`${incident.id}-${currentView}`}
+                src={api.evidence.getVideoUrl(incident.id, {
+                  tier: currentView === 'unblurred' ? 'raw' : currentView,
+                  variant: 'targeted',
+                })}
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-contain z-10"
+                onError={(e) => {
+                  // Hide video tag if backend media is image or still synthesizing
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+
+              {/* Watermark overlay when in Unblurred mode */}
+              {currentView === 'unblurred' && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none opacity-25 rotate-[-15deg]">
+                  <span className="text-[26px] font-mono text-white tracking-widest font-bold">
+                    {user?.email || 'RAKSHAK-AI AUDITED'}
                   </span>
                 </div>
               )}
+
+              {/* Privacy Canvas & HUD Layer */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 select-none">
+                {currentView === 'skeleton' ? (
+                  /* Skeleton Mode */
+                  <div className="w-full h-full flex flex-col items-center justify-center relative">
+                    <svg
+                      className="w-32 h-40 opacity-90"
+                      viewBox="0 0 100 120"
+                      fill="none"
+                      stroke="#EDEBE6"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="50" cy="20" r="10" stroke="#EDEBE6" strokeWidth="2.5" />
+                      <line x1="50" y1="30" x2="50" y2="65" />
+                      <line x1="50" y1="42" x2="30" y2="55" />
+                      <line x1="30" y1="55" x2="22" y2="70" />
+                      <line x1="50" y1="42" x2="70" y2="55" />
+                      <line x1="70" y1="55" x2="78" y2="70" />
+                      <line x1="50" y1="65" x2="35" y2="90" />
+                      <line x1="35" y1="90" x2="30" y2="115" />
+                      <line x1="50" y1="65" x2="65" y2="90" />
+                      <line x1="65" y1="90" x2="70" y2="115" />
+                    </svg>
+                    {/* Active person bounding box */}
+                    <div className="absolute inset-12 border-2 border-video-alertBox/90 rounded pointer-events-none flex items-start justify-between p-2">
+                      <span className="bg-video-alertBox text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
+                        ID: P-04 (curfew violation)
+                      </span>
+                      <span className="text-[11px] text-[#EDEBE6] font-mono">
+                        23:38:12
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#B9B7B1] mt-2">
+                      SKELETON STREAM · TRACK #104
+                    </span>
+                  </div>
+                ) : currentView === 'blurred' ? (
+                  /* Face Blurred Mode */
+                  <div className="w-full h-full bg-[#2C2E33] flex flex-col items-center justify-center relative">
+                    <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-2">
+                      <span className="text-[11px] text-white/80 font-mono">[FACE BLURRED]</span>
+                    </div>
+                    <span className="text-[12px] text-[#EDEBE6] font-medium">
+                      Footage preview with privacy filter active
+                    </span>
+                    <span className="text-[11px] text-[#B9B7B1] mt-1">
+                      10-minute temporary breakglass session
+                    </span>
+                  </div>
+                ) : (
+                  /* Unblurred Authorized Mode with Watermark */
+                  <div className="w-full h-full bg-[#18191D] flex flex-col items-center justify-center relative">
+                    <ShieldCheck size={40} className="text-status-healthy mb-2" />
+                    <span className="text-[13px] text-white font-medium">
+                      Full unblurred identity footage active
+                    </span>
+                    <span className="text-[11px] text-[#B9B7B1] mt-1 font-mono">
+                      Watermarked & logged to immutable audit ledger
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Modality Lane Timeline */}

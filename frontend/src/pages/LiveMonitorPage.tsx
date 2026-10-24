@@ -269,8 +269,12 @@ export const LiveMonitorPage: React.FC = () => {
             <CameraTile
               key={cam.camera_id}
               camera={cam}
+              incidentId={urgentIncident?.id}
               defaultMode="skeleton"
-              hasActiveIntrusion={urgentIncident?.zone_id?.includes('terrace')}
+              hasActiveIntrusion={Boolean(
+                urgentIncident?.status !== 'closed' &&
+                  (urgentIncident?.zone_id === cam.zone_id || cam.camera_id === 'cam_terrace')
+              )}
             />
           ))}
         </div>
