@@ -1,0 +1,112 @@
+import React from 'react'
+import { NavLink } from 'react-router-dom'
+import {
+  Activity,
+  Video,
+  AlertTriangle,
+  MapPin,
+  Camera,
+  Sliders,
+  Gauge,
+  BarChart2,
+  Lock,
+  Settings,
+  ShieldCheck,
+  Inbox,
+} from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+
+interface SidebarProps {
+  onCloseMobile?: () => void
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
+  const { user, org } = useAuthStore()
+  const isOwnerOrAdmin = user?.role === 'owner' || user?.role === 'admin'
+
+  const navItems = [
+    { label: 'Live Monitor', to: '/', icon: <Activity size={18} /> },
+    { label: 'Analyze Footage', to: '/analyze', icon: <Video size={18} /> },
+    { label: 'Incidents', to: '/incidents', icon: <AlertTriangle size={18} /> },
+    ...(isOwnerOrAdmin
+      ? [{ label: 'Approvals Inbox', to: '/approvals', icon: <Inbox size={18} /> }]
+      : []),
+    { label: 'Map & Patrol', to: '/map', icon: <MapPin size={18} /> },
+    { label: 'Cameras', to: '/cameras', icon: <Camera size={18} /> },
+    { label: 'Rules & Zones', to: '/rules', icon: <Sliders size={18} /> },
+    { label: 'Calibration', to: '/calibration', icon: <Gauge size={18} /> },
+    { label: 'Evaluation', to: '/evaluation', icon: <BarChart2 size={18} /> },
+    { label: 'Privacy & Audit', to: '/privacy', icon: <Lock size={18} /> },
+    { label: 'Settings', to: '/settings', icon: <Settings size={18} /> },
+  ]
+
+  return (
+    <aside className="w-[240px] shrink-0 bg-sidebar border-r border-border-card flex flex-col justify-between h-screen sticky top-0">
+      <div className="flex flex-col">
+        {/* Brand & Org */}
+        <div className="p-5 border-b border-border-divider">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center text-white shadow-soft shrink-0">
+              <ShieldCheck size={20} strokeWidth={2.4} />
+            </div>
+            <div>
+              <span className="text-[17px] font-bold tracking-tight text-content-primary block leading-none">
+                RakshakAI
+              </span>
+              <span className="text-[11px] font-medium text-primary tracking-wide block mt-1">
+                Privacy-First Safety
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3.5 pt-2 border-t border-border-divider/60">
+            <p className="text-[12px] font-medium text-content-secondary truncate">
+              {org?.name || 'Sunrise Residency'}
+            </p>
+            <p className="text-[11px] text-content-muted truncate">
+              Block B Hostel
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation links */}
+        <nav className="p-3 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onCloseMobile}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 text-[14px] font-medium rounded-btn transition-colors ${
+                  isActive
+                    ? 'bg-fill-active text-content-primary'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-fill-subtle'
+                }`
+              }
+            >
+              <span className="text-content-muted">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      {/* Footer: On duty tonight */}
+      <div className="p-4 m-3 rounded-card bg-fill-subtle border border-border-card/60">
+        <p className="text-[11px] font-semibold text-content-muted uppercase tracking-wider">
+          On duty tonight
+        </p>
+        <div className="mt-2 space-y-1 text-[12px] text-content-body">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Ramesh K.</span>
+            <span className="text-content-muted text-[11px]">Terrace</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Suresh M.</span>
+            <span className="text-content-muted text-[11px]">Gate & Entry</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}
