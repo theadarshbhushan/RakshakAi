@@ -5,7 +5,7 @@ Calculates Bayesian composite confidence score, determines severity, and generat
 human-readable explanation narratives detailing all corroborating and suppressed signals.
 """
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from beanie import PydanticObjectId
@@ -55,11 +55,17 @@ class FusionEngine:
         composite = 1.0 - prod
         return round(max(0.0, min(1.0, composite)), 3)
 
-    def determine_severity(self, signals: List[Signal], composite_score: float) -> str:
+    def determine_severity(
+        self,
+        signals: List[Signal],
+        composite_score: float,
+        is_blind_spot: bool = False,
+    ) -> str:
         """
         Severity determination rules:
         - SOS corroborated by video or audio in same zone -> critical
         - >= 3 modalities OR (fight AND distress_audio) -> critical
+        - Blind spot compensation: in a blind-spot zone, any student SOS or access violation is at least high
         - SOS alone -> high (at least high)
         - 2 modalities -> high
         - 1 modality & composite >= 0.6 -> medium
@@ -75,6 +81,11 @@ class FusionEngine:
 
         if len(modalities) >= 3 or ("fight" in kinds and "distress_audio" in kinds):
             return "critical"
+
+        # Blind spot compensation: any student SOS or access violation in a blind spot zone is at least high severity
+        access_kinds = {"restricted_access", "curfew_violation", "tailgating"}
+        if is_blind_spot and ("student_sos" in kinds or (kinds & access_kinds)):
+            return "high"
 
         # SOS alone creates at least a high-severity incident
         if "student_sos" in kinds:
@@ -177,10 +188,21 @@ class FusionEngine:
                     f"Unusual activity: Person loitering in '{zone_name}' for {dur}s during curfew hours at {t_str} (score {s.score:.2f})."
                 )
             elif s.kind == "camera_tamper":
-                tamper_type = s.details.get("tamper_type", "view obstructed or altered")
+                tamper_type = s.details.get("tamper_type") or s.details.get("reason") or "covered"
+                metric = s.details.get("metric")
+                if metric is None and "brightness" in s.details:
+                    metric = f"brightness {s.details['brightness']}"
+                elif metric is not None and (isinstance(metric, (int, float)) or (isinstance(metric, str) and str(metric).replace('.', '', 1).isdigit())):
+                    if "cover" in str(tamper_type).lower() or "dark" in str(tamper_type).lower():
+                        metric = f"brightness {metric}"
+                    elif "blur" in str(tamper_type).lower():
+                        metric = f"blur {metric}"
+                    elif "move" in str(tamper_type).lower():
+                        metric = f"corr {metric}"
+                metric_str = f" ({metric})" if metric else ""
                 cam = s.camera_id or "camera"
                 narrative_parts.append(
-                    f"Camera tamper detected on {cam} at {t_str}: {tamper_type} (score {s.score:.2f})."
+                    f"Camera {cam} {tamper_type}{metric_str}. Zone {zone_name} is a blind spot; audio sensitivity raised and patrol priority increased."
                 )
 
         explanation = ""
@@ -197,10 +219,14 @@ class FusionEngine:
             explanation += "."
 
         # Query suppressed signals in the same zone around this window
+        inc_start = ensure_utc(incident.created_ts) - timedelta(seconds=self.fusion_window_s)
+        inc_end = ensure_utc(incident.updated_ts) + timedelta(seconds=self.fusion_window_s)
         suppressed_signals = await Signal.find(
             Signal.org_id == self.org_id,
             Signal.zone_id == incident.zone_id,
             Signal.suppressed == True,
+            Signal.ts >= inc_start,
+            Signal.ts <= inc_end,
         ).to_list()
 
         suppressed_parts = []
@@ -247,6 +273,23 @@ class FusionEngine:
 
         # Determine target zones (current zone + adjacent zones)
         zone_doc = await Zone.find_one({"org_id": self.org_id, "zone_id": signal.zone_id})
+
+        # If camera_tamper signal received, automatically update camera health to tampered and apply blind-spot compensation
+        if signal.kind == "camera_tamper" and signal.camera_id:
+            from app.services.camera_health_service import CameraHealthService
+            t_reason = signal.details.get("tamper_type") or signal.details.get("reason") or "dark"
+            try:
+                await CameraHealthService.update_camera_health(
+                    org_id=self.org_id,
+                    camera_id=signal.camera_id,
+                    health_status="tampered",
+                    health_reason=t_reason,
+                    last_frame_at=signal.ts,
+                )
+                zone_doc = await Zone.find_one({"org_id": self.org_id, "zone_id": signal.zone_id})
+            except Exception as e:
+                logger.warning(f"Could not update camera health for tamper signal: {e}")
+
         resolved_site_id = signal.site_id or (zone_doc.site_id if zone_doc else None)
         if not signal.site_id and resolved_site_id:
             signal.site_id = resolved_site_id
@@ -324,7 +367,12 @@ class FusionEngine:
 
         # Compute composite score and severity
         incident.composite_score = self.calculate_composite_score(contributing_signals)
-        incident.severity = self.determine_severity(contributing_signals, incident.composite_score)
+        is_blind_spot = bool(zone_doc and zone_doc.is_blind_spot)
+        incident.severity = self.determine_severity(
+            contributing_signals,
+            incident.composite_score,
+            is_blind_spot=is_blind_spot,
+        )
 
         # Generate explainable narrative
         incident.explanation = await self.generate_explanation(incident, contributing_signals, zone_name)

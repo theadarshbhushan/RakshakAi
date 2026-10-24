@@ -21,7 +21,7 @@ from app.models.incident import Incident
 from app.models.organization import Organization
 from app.models.signal import Signal
 from app.models.user import User
-from app.models.zone import Zone
+from app.models.zone import Camera, Zone
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -138,6 +138,7 @@ class PatrolPlanItem(BaseModel):
     open_incidents: int
     recent_tamper: bool
     recent_sos: bool
+    is_blind_spot: bool = False
 
 
 class PatrolPlanResponse(BaseModel):
@@ -358,13 +359,23 @@ async def get_patrol_plan(
     zones = await Zone.find({"org_id": org_id}).sort("name").to_list()
     zone_map = {z.zone_id: z.name for z in zones}
 
-    # 2. Fetch incidents in timeframe
+    # 2. Fetch cameras to identify blind-spot zones (tampered | offline)
+    cameras = await Camera.find(Camera.org_id == org_id).to_list()
+    tampered_offline_camera_zones = set(
+        c.zone_id for c in cameras if c.health_status in ("tampered", "offline")
+    )
+    zone_blind_spot_map = {
+        z.zone_id: bool(z.is_blind_spot or z.zone_id in tampered_offline_camera_zones)
+        for z in zones
+    }
+
+    # 3. Fetch incidents in timeframe
     incidents = await Incident.find(
         Incident.org_id == org_id,
         Incident.created_ts >= cutoff,
     ).to_list()
 
-    # 3. Fetch recent signals for tamper / student_sos boosts
+    # 4. Fetch recent signals for tamper / student_sos boosts
     recent_tamper_signals = await Signal.find(
         Signal.org_id == org_id,
         Signal.kind == "camera_tamper",
@@ -379,13 +390,13 @@ async def get_patrol_plan(
     ).to_list()
     sos_zones = set(s.zone_id for s in recent_sos_signals)
 
-    # 4. Open incidents in each zone
+    # 5. Open incidents in each zone
     open_incidents_by_zone: Dict[str, int] = {z_id: 0 for z_id in zone_map}
     for inc in incidents:
         if inc.status in ("new", "investigating"):
             open_incidents_by_zone[inc.zone_id] = open_incidents_by_zone.get(inc.zone_id, 0) + 1
 
-    # 5. Calculate shift risk and collect incident metadata per zone
+    # 6. Calculate shift risk and collect incident metadata per zone
     # zone -> hour -> risk
     zone_shift_hourly: Dict[str, Dict[int, float]] = {
         z_id: {hr: 0.0 for hr in shift_hours} for z_id in zone_map
@@ -407,7 +418,7 @@ async def get_patrol_plan(
             if inc.status == "confirmed":
                 zone_shift_confirmed[z_id].append(inc)
 
-    # 6. Rank each zone
+    # 7. Rank each zone
     plan_items: List[PatrolPlanItem] = []
     for z_id, z_name in zone_map.items():
         hourly_scores = zone_shift_hourly.get(z_id, {})
@@ -419,9 +430,11 @@ async def get_patrol_plan(
         else:
             peak_hr = shift_hours[0]
 
+        is_blind_spot = zone_blind_spot_map.get(z_id, False)
+
         # Calculate boosts
         open_cnt = open_incidents_by_zone.get(z_id, 0)
-        has_tamper = z_id in tamper_zones
+        has_tamper = z_id in tamper_zones or is_blind_spot
         has_sos = z_id in sos_zones
 
         boost = 0.0
@@ -431,18 +444,23 @@ async def get_patrol_plan(
             boost += 2.5
         if has_sos:
             boost += 3.0
+        if is_blind_spot:
+            boost += 10.0
 
         total_risk = round(base_shift_risk + boost, 2)
 
         # Generate explanatory reason text
         reasons: List[str] = []
+        if is_blind_spot:
+            reasons.append("camera not functioning")
+
         conf_list = zone_shift_confirmed.get(z_id, [])
         if conf_list:
             reasons.append(
                 f"{len(conf_list)} confirmed incident{'s' if len(conf_list) > 1 else ''} between {shift_start} and {shift_end} in the last {days} days"
             )
 
-        if has_tamper:
+        if has_tamper and not is_blind_spot:
             reasons.append("camera tampered recently")
         if has_sos:
             reasons.append("recent student SOS reported")
@@ -466,10 +484,11 @@ async def get_patrol_plan(
             open_incidents=open_cnt,
             recent_tamper=has_tamper,
             recent_sos=has_sos,
+            is_blind_spot=is_blind_spot,
         ))
 
-    # Sort descending by risk_score
-    plan_items.sort(key=lambda item: item.risk_score, reverse=True)
+    # Blind-spot zones go to the top, then sorted descending by risk_score
+    plan_items.sort(key=lambda item: (item.is_blind_spot, item.risk_score), reverse=True)
 
     return PatrolPlanResponse(
         shift_start=shift_start,

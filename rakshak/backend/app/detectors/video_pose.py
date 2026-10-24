@@ -701,20 +701,20 @@ class VideoPoseDetector(BaseDetector):
             tamper_metric = 0.0
 
             if mean_brightness < 15.0:
-                tamper_type = "blackout (near-black frame)"
-                tamper_metric = mean_brightness
+                tamper_type = "covered"
+                tamper_metric = f"brightness {int(round(mean_brightness))}"
             elif rolling_laplacian_var is not None and rolling_laplacian_var > 35.0:
                 if laplacian_var < 0.15 * rolling_laplacian_var:
-                    tamper_type = "heavy blur (lens obstructed/defocused)"
-                    tamper_metric = laplacian_var
+                    tamper_type = "blur"
+                    tamper_metric = f"blur {round(laplacian_var, 1)}"
             elif baseline_hist is not None:
                 hist_corr = float(cv2.compareHist(hist, baseline_hist, cv2.HISTCMP_CORREL))
                 if hist_corr < 0.35:
                     if view_change_start_ts is None:
                         view_change_start_ts = current_sim_time
                     elif (current_sim_time - view_change_start_ts).total_seconds() > 3.0:
-                        tamper_type = "sudden view redirection"
-                        tamper_metric = hist_corr
+                        tamper_type = "moved"
+                        tamper_metric = f"corr {round(hist_corr, 2)}"
                 else:
                     view_change_start_ts = None
 
@@ -747,6 +747,7 @@ class VideoPoseDetector(BaseDetector):
                         details={
                             "tamper_type": tamper_type,
                             "metric": tamper_metric,
+                            "reason": "dark" if tamper_type == "covered" else ("blur" if tamper_type == "blur" else "moved"),
                         },
                         source="video_pose",
                     )

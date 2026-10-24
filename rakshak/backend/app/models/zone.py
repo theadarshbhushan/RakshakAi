@@ -31,6 +31,9 @@ class Zone(Document):
     adjacent_zone_ids: List[str] = Field(default_factory=list)
     map_coords: Dict[str, Any] = Field(default_factory=dict)
     sos_token: Optional[str] = Field(default_factory=generate_sos_token, description="Random rotatable token for student SOS QR code")
+    is_blind_spot: bool = Field(default=False, description="True if camera in zone is tampered or offline")
+    blind_spot_reason: Optional[str] = Field(default=None, description="Reason zone is a blind spot")
+    blind_spot_adjustments: Optional[Dict[str, Any]] = Field(default=None, description="Active blind spot threshold adjustments")
     created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
@@ -51,6 +54,9 @@ class Camera(Document):
     source_path: str
     door_line: Optional[Dict[str, Any]] = None  # e.g. {"p1": [0.2, 0.5], "p2": [0.8, 0.5]}
     status: str = Field(default="online")
+    health_status: str = Field(default="ok", description="ok | degraded | tampered | offline")
+    health_reason: Optional[str] = Field(default=None, description="dark | blur | moved | no frames")
+    last_frame_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
@@ -59,4 +65,5 @@ class Camera(Document):
             IndexModel([("org_id", ASCENDING), ("camera_id", ASCENDING)], unique=True),
             IndexModel([("org_id", ASCENDING), ("zone_id", ASCENDING)]),
             IndexModel([("org_id", ASCENDING), ("site_id", ASCENDING)]),
+            IndexModel([("org_id", ASCENDING), ("health_status", ASCENDING)]),
         ]

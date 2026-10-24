@@ -61,6 +61,8 @@ class ZoneResponse(BaseModel):
     adjacent_zone_ids: List[str]
     map_coords: Dict[str, Any]
     sos_token: Optional[str] = None
+    is_blind_spot: bool = False
+    blind_spot_reason: Optional[str] = None
     created_at: datetime
 
 
@@ -84,6 +86,9 @@ class CameraResponse(BaseModel):
     source_path: str
     door_line: Optional[Dict[str, Any]] = None
     status: str
+    health_status: str = "ok"
+    health_reason: Optional[str] = None
+    last_frame_at: Optional[datetime] = None
     created_at: datetime
 
 
