@@ -32,7 +32,9 @@ htmlcov/
 # ML weights and datasets
 *.pt
 *.joblib
-models/
+/models/
+ml/models/*
+!ml/models/.gitkeep
 yolov8n-pose.pt
 data/raw_datasets/
 data/videos/

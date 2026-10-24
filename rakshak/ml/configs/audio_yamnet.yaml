@@ -1,0 +1,51 @@
+# YAMNet Distress Audio Classifier Configuration
+model:
+  tfhub_handle: "https://tfhub.dev/google/yamnet/1"
+  sample_rate: 16000
+  window_length_seconds: 0.96
+  window_hop_seconds: 0.48
+
+pipeline:
+  stage1:
+    default_distress_threshold: 0.35
+    distress_classes:
+      - "Screaming"
+      - "Shout"
+      - "Yell"
+      - "Children shouting"
+      - "Crying, sobbing"
+      - "Wail, moan"
+      - "Glass"
+      - "Shatter"
+
+  stage2_context_filter:
+    context_ratio: 0.80
+    confusable_classes:
+      - "Laughter"
+      - "Giggle"
+      - "Chuckle, chortle"
+      - "Cheering"
+      - "Applause"
+      - "Crowd"
+      - "Music"
+      - "Singing"
+      - "Children playing"
+
+  stage3_persistence:
+    history_windows: 3
+    required_passes: 2
+
+optional:
+  audio_head:
+    path: "ml/models/audio_head.joblib"
+    enabled_env_flag: "AUDIO_CLASSIFIER=yamnet_head"
+
+  help_keywords:
+    model_size: "tiny"
+    device: "cpu"
+    compute_type: "int8"
+    keywords:
+      - "help"
+      - "bachao"
+    score_boost: 0.15
+    enabled_env_flag: "HELP_KEYWORDS=true"

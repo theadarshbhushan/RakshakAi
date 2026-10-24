@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     SCENARIOS_DIR: Path = PROJECT_ROOT / "data" / "scenarios"
     ACCESS_LOGS_DIR: Path = PROJECT_ROOT / "data" / "access_logs"
     EVAL_DIR: Path = PROJECT_ROOT / "data" / "eval"
+    ML_DIR: Path = PROJECT_ROOT / "ml"
+    MODELS_DIR: Path = PROJECT_ROOT / "ml" / "models"
+    EVAL_RESULTS_DIR: Path = PROJECT_ROOT / "ml" / "eval" / "results"
 
     @property
     def cors_origin_list(self) -> List[str]:

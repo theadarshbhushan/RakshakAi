@@ -1,0 +1,486 @@
+{
+  "timestamp": "2026-10-24T17:18:38.180705+00:00",
+  "tasks": {
+    "audio_distress": {
+      "metrics": {
+        "tp": 3,
+        "fp": 1,
+        "tn": 4,
+        "fn": 0,
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1": 0.8571,
+        "fpr": 0.2,
+        "total": 8
+      },
+      "hard_negatives": {
+        "tp": 0,
+        "fp": 1,
+        "tn": 2,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.3333,
+        "total": 3
+      },
+      "fairness_by_voice": {
+        "female": {
+          "tp": 2,
+          "fp": 0,
+          "tn": 1,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "fpr": 0.0,
+          "total": 3
+        },
+        "mixed": {
+          "tp": 0,
+          "fp": 1,
+          "tn": 0,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "fpr": 1.0,
+          "total": 1
+        },
+        "na": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 2,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "fpr": 0.0,
+          "total": 2
+        },
+        "male": {
+          "tp": 1,
+          "fp": 0,
+          "tn": 1,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "fpr": 0.0,
+          "total": 2
+        }
+      },
+      "latency_per_sec_media": 0.1114,
+      "samples": [
+        {
+          "file": "audio/distress/distress_01.wav",
+          "task": "distress_audio",
+          "score": 0.887,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false,
+          "voice": "female"
+        },
+        {
+          "file": "audio/hard_negative/cheering_01.wav",
+          "task": "distress_audio",
+          "score": 0.638,
+          "predicted": 1,
+          "expected": 0,
+          "is_hard_negative": true,
+          "voice": "mixed"
+        },
+        {
+          "file": "audio/normal/normal_01.wav",
+          "task": "distress_audio",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": false,
+          "voice": "na"
+        },
+        {
+          "file": "audio/distress/distress_f2.wav",
+          "task": "distress_audio",
+          "score": 0.887,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false,
+          "voice": "female"
+        },
+        {
+          "file": "audio/distress/distress_m1.wav",
+          "task": "distress_audio",
+          "score": 0.5,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false,
+          "voice": "male"
+        },
+        {
+          "file": "audio/hard_negative/laughter_01.wav",
+          "task": "distress_audio",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": true,
+          "voice": "female"
+        },
+        {
+          "file": "audio/hard_negative/laughter_02.wav",
+          "task": "distress_audio",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": true,
+          "voice": "male"
+        },
+        {
+          "file": "audio/normal/ambient_01.wav",
+          "task": "distress_audio",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": false,
+          "voice": "na"
+        }
+      ]
+    },
+    "access_rules": {
+      "metrics": {
+        "tp": 16,
+        "fp": 0,
+        "tn": 24,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "total": 40
+      },
+      "hard_negatives": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 4,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "total": 4
+      },
+      "total_swipes_evaluated": 40
+    },
+    "loitering": {
+      "metrics": {
+        "tp": 1,
+        "fp": 1,
+        "tn": 0,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667,
+        "fpr": 1.0,
+        "total": 2
+      },
+      "latency_per_sec_media": 0.6159,
+      "samples": [
+        {
+          "file": "videos/intrusion/intrusion_01.mp4",
+          "task": "loitering",
+          "score": 0.88,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false
+        },
+        {
+          "file": "videos/normal/normal_01.mp4",
+          "task": "loitering",
+          "score": 0.88,
+          "predicted": 1,
+          "expected": 0,
+          "is_hard_negative": true
+        }
+      ]
+    },
+    "tailgating": {
+      "metrics": {
+        "tp": 1,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "total": 2
+      },
+      "latency_per_sec_media": 0.4531,
+      "samples": [
+        {
+          "file": "videos/tailgating/tailgate_01.mp4",
+          "task": "tailgating",
+          "score": 0.96,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false
+        },
+        {
+          "file": "videos/normal/normal_01.mp4",
+          "task": "tailgating",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": false
+        }
+      ]
+    },
+    "zone_intrusion": {
+      "metrics": {
+        "tp": 1,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "total": 2
+      },
+      "latency_per_sec_media": 0.4414,
+      "samples": [
+        {
+          "file": "videos/intrusion/intrusion_01.mp4",
+          "task": "zone_intrusion",
+          "score": 0.76,
+          "predicted": 1,
+          "expected": 1,
+          "is_hard_negative": false
+        },
+        {
+          "file": "videos/normal/normal_01.mp4",
+          "task": "zone_intrusion",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "is_hard_negative": false
+        }
+      ]
+    }
+  },
+  "fusion_comparison": {
+    "audio_only": {
+      "tp": 1,
+      "fp": 2,
+      "tn": 4,
+      "fn": 1,
+      "precision": 0.3333,
+      "recall": 0.5,
+      "f1": 0.4,
+      "fpr": 0.3333,
+      "total": 8
+    },
+    "video_only": {
+      "tp": 2,
+      "fp": 2,
+      "tn": 4,
+      "fn": 0,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6667,
+      "fpr": 0.3333,
+      "total": 8
+    },
+    "fused": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 6,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "fpr": 0.0,
+      "total": 8
+    },
+    "bundles": [
+      {
+        "id": "S1",
+        "is_emergency": 1,
+        "audio_alert": 1,
+        "video_alert": 1,
+        "access_alert": 1
+      },
+      {
+        "id": "S2",
+        "is_emergency": 1,
+        "audio_alert": 0,
+        "video_alert": 1,
+        "access_alert": 1
+      },
+      {
+        "id": "S3",
+        "is_emergency": 0,
+        "audio_alert": 1,
+        "video_alert": 0,
+        "access_alert": 0
+      },
+      {
+        "id": "S4",
+        "is_emergency": 0,
+        "audio_alert": 0,
+        "video_alert": 0,
+        "access_alert": 0
+      },
+      {
+        "id": "B1",
+        "is_emergency": 0,
+        "audio_alert": 1,
+        "video_alert": 0,
+        "access_alert": 0
+      },
+      {
+        "id": "B2",
+        "is_emergency": 0,
+        "audio_alert": 0,
+        "video_alert": 1,
+        "access_alert": 0
+      },
+      {
+        "id": "B3",
+        "is_emergency": 0,
+        "audio_alert": 0,
+        "video_alert": 1,
+        "access_alert": 0
+      },
+      {
+        "id": "B4",
+        "is_emergency": 0,
+        "audio_alert": 0,
+        "video_alert": 0,
+        "access_alert": 0
+      }
+    ]
+  },
+  "per_sample_scores": [
+    {
+      "file": "audio/distress/distress_01.wav",
+      "task": "distress_audio",
+      "score": 0.887,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false,
+      "voice": "female"
+    },
+    {
+      "file": "audio/hard_negative/cheering_01.wav",
+      "task": "distress_audio",
+      "score": 0.638,
+      "predicted": 1,
+      "expected": 0,
+      "is_hard_negative": true,
+      "voice": "mixed"
+    },
+    {
+      "file": "audio/normal/normal_01.wav",
+      "task": "distress_audio",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": false,
+      "voice": "na"
+    },
+    {
+      "file": "audio/distress/distress_f2.wav",
+      "task": "distress_audio",
+      "score": 0.887,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false,
+      "voice": "female"
+    },
+    {
+      "file": "audio/distress/distress_m1.wav",
+      "task": "distress_audio",
+      "score": 0.5,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false,
+      "voice": "male"
+    },
+    {
+      "file": "audio/hard_negative/laughter_01.wav",
+      "task": "distress_audio",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": true,
+      "voice": "female"
+    },
+    {
+      "file": "audio/hard_negative/laughter_02.wav",
+      "task": "distress_audio",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": true,
+      "voice": "male"
+    },
+    {
+      "file": "audio/normal/ambient_01.wav",
+      "task": "distress_audio",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": false,
+      "voice": "na"
+    },
+    {
+      "file": "videos/intrusion/intrusion_01.mp4",
+      "task": "loitering",
+      "score": 0.88,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false
+    },
+    {
+      "file": "videos/normal/normal_01.mp4",
+      "task": "loitering",
+      "score": 0.88,
+      "predicted": 1,
+      "expected": 0,
+      "is_hard_negative": true
+    },
+    {
+      "file": "videos/tailgating/tailgate_01.mp4",
+      "task": "tailgating",
+      "score": 0.96,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false
+    },
+    {
+      "file": "videos/normal/normal_01.mp4",
+      "task": "tailgating",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": false
+    },
+    {
+      "file": "videos/intrusion/intrusion_01.mp4",
+      "task": "zone_intrusion",
+      "score": 0.76,
+      "predicted": 1,
+      "expected": 1,
+      "is_hard_negative": false
+    },
+    {
+      "file": "videos/normal/normal_01.mp4",
+      "task": "zone_intrusion",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "is_hard_negative": false
+    }
+  ]
+}

@@ -20,9 +20,9 @@ router = APIRouter(prefix="/eval", tags=["Evaluation"])
 
 
 async def _run_eval_background():
-    """Background task executing scripts/run_eval.py."""
+    """Background task executing ml/eval/run_eval.py."""
     try:
-        from scripts.run_eval import run_evaluation
+        from ml.eval.run_eval import run_evaluation
         await run_evaluation()
     except Exception as e:
         logger.error(f"Error running background evaluation: {e}", exc_info=e)
@@ -30,8 +30,10 @@ async def _run_eval_background():
 
 @router.get("/results", response_model=Dict[str, Any])
 async def get_eval_results():
-    """Retrieve evaluation metrics from data/eval/results.json if present, else empty structure."""
-    results_file = settings.EVAL_DIR / "results.json"
+    """Retrieve evaluation metrics from ml/eval/results/results.json if present, else empty structure."""
+    results_file = settings.EVAL_RESULTS_DIR / "results.json"
+    if not results_file.exists():
+        results_file = settings.EVAL_DIR / "results.json"
     if results_file.exists():
         try:
             with open(results_file, "r", encoding="utf-8") as rf:

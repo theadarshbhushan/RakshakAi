@@ -1,0 +1,15 @@
+file,modality,task,expected_label,is_hard_negative,source,voice
+audio/distress/distress_01.wav,audio,distress_audio,1,0,synthetic,female
+audio/hard_negative/cheering_01.wav,audio,distress_audio,0,1,synthetic,mixed
+audio/normal/normal_01.wav,audio,distress_audio,0,0,synthetic,na
+audio/distress/distress_f2.wav,audio,distress_audio,1,0,synthetic,female
+audio/distress/distress_m1.wav,audio,distress_audio,1,0,synthetic,male
+audio/hard_negative/laughter_01.wav,audio,distress_audio,0,1,synthetic,female
+audio/hard_negative/laughter_02.wav,audio,distress_audio,0,1,synthetic,male
+audio/normal/ambient_01.wav,audio,distress_audio,0,0,synthetic,na
+videos/intrusion/intrusion_01.mp4,video,zone_intrusion,1,0,synthetic,na
+videos/normal/normal_01.mp4,video,zone_intrusion,0,0,synthetic,na
+videos/tailgating/tailgate_01.mp4,video,tailgating,1,0,synthetic,na
+videos/normal/normal_01.mp4,video,tailgating,0,0,synthetic,na
+videos/intrusion/intrusion_01.mp4,video,loitering,1,0,synthetic,na
+videos/normal/normal_01.mp4,video,loitering,0,1,synthetic,na

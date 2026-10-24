@@ -1,0 +1,32 @@
+# Multi-Modal Fusion and Access Rules Defaults
+fusion:
+  window_seconds: 30.0
+  weights:
+    video: 0.85
+    audio: 0.70
+    access: 0.75
+
+severity_matrix:
+  critical:
+    modalities_min: 3
+    special_combinations:
+      - ["fight", "distress_audio"]
+  high:
+    modalities_min: 2
+    single_signal_overrides:
+      camera_tamper: 0.80
+  medium:
+    modalities_min: 1
+    composite_score_min: 0.60
+    single_signal_overrides:
+      camera_tamper: 0.00
+  low:
+    modalities_min: 1
+    composite_score_max: 0.60
+
+access_control:
+  curfew:
+    start: "23:00"
+    end: "05:30"
+  tailgating:
+    window_seconds: 5.0

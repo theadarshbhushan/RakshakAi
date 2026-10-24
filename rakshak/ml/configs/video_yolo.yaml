@@ -1,0 +1,32 @@
+# YOLOv8n-pose detector configuration
+model:
+  weights: "yolov8n-pose.pt"
+  tracker: "bytetrack.yaml"
+  device: "cpu"
+  max_width: 640
+  target_fps: 8
+
+heuristics:
+  zone_intrusion:
+    consecutive_frames_inside: 5
+    cooldown_seconds: 20.0
+    keypoint_confidence_min: 0.20
+    keypoint_indices: [15, 16] # left ankle, right ankle
+
+  loitering:
+    default_duration_seconds: 45
+    curfew_start: "23:00"
+    curfew_end: "05:30"
+
+  fight:
+    enabled_by_default: false
+    center_dist_box_width_multiplier: 1.2
+    normalized_wrist_speed_threshold: 1.8
+    duration_seconds: 1.0
+
+  tamper:
+    brightness_min: 15.0
+    laplacian_variance_ratio_min: 0.20
+    hist_correlation_min: 0.40
+    redirect_duration_seconds: 3.0
+    cooldown_seconds: 30.0

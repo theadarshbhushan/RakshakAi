@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-24T17:10:11.418413+00:00",
+  "timestamp": "2026-10-24T17:18:38.180705+00:00",
   "tasks": {
     "audio_distress": {
       "metrics": {
@@ -70,7 +70,7 @@
           "total": 2
         }
       },
-      "latency_per_sec_media": 0.1314,
+      "latency_per_sec_media": 0.1114,
       "samples": [
         {
           "file": "audio/distress/distress_01.wav",
@@ -183,7 +183,7 @@
         "fpr": 1.0,
         "total": 2
       },
-      "latency_per_sec_media": 0.7539,
+      "latency_per_sec_media": 0.6159,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
@@ -215,7 +215,7 @@
         "fpr": 0.0,
         "total": 2
       },
-      "latency_per_sec_media": 0.4518,
+      "latency_per_sec_media": 0.4531,
       "samples": [
         {
           "file": "videos/tailgating/tailgate_01.mp4",
@@ -247,7 +247,7 @@
         "fpr": 0.0,
         "total": 2
       },
-      "latency_per_sec_media": 0.405,
+      "latency_per_sec_media": 0.4414,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",

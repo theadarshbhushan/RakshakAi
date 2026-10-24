@@ -111,9 +111,11 @@ def get_yamnet_class_mapping(model) -> Tuple[List[str], List[int], List[int]]:
 def load_audio_head_if_enabled():
     global _cached_audio_head
     if _cached_audio_head is None:
-        model_path = settings.DATA_DIR.parent / "models" / "audio_head.joblib"
+        model_path = settings.MODELS_DIR / "audio_head.joblib"
         if not model_path.exists():
-            model_path = Path("models/audio_head.joblib")
+            model_path = settings.DATA_DIR.parent / "models" / "audio_head.joblib"
+        if not model_path.exists():
+            model_path = Path("ml/models/audio_head.joblib")
         if settings.AUDIO_CLASSIFIER == "yamnet_head" and model_path.exists():
             import joblib
             try:
