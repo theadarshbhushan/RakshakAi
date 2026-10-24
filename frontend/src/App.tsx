@@ -52,6 +52,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>
 }
 
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+
+const withBoundary = (component: React.ReactNode, title?: string) => (
+  <ErrorBoundary fallbackTitle={title}>{component}</ErrorBoundary>
+)
+
 export function App() {
   const { initAuth } = useAuthStore()
 
@@ -64,9 +70,9 @@ export function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/sos/:token" element={<StudentSosPage />} />
-          <Route path="/transparency" element={<StudentTransparencyPage />} />
+          <Route path="/login" element={withBoundary(<LoginPage />, 'Unable to load login')} />
+          <Route path="/sos/:token" element={withBoundary(<StudentSosPage />, 'Unable to load SOS view')} />
+          <Route path="/transparency" element={withBoundary(<StudentTransparencyPage />, 'Unable to load transparency')} />
 
           {/* Protected app shell routes */}
           <Route
@@ -76,19 +82,19 @@ export function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={<LiveMonitorPage />} />
-            <Route path="/analyze" element={<AnalyzeFootagePage />} />
-            <Route path="/incidents" element={<IncidentQueuePage />} />
-            <Route path="/incidents/:id" element={<IncidentDetailPage />} />
-            <Route path="/approvals" element={<ApprovalsPage />} />
-            <Route path="/map" element={<MapPatrolPage />} />
-            <Route path="/cameras" element={<CamerasPage />} />
-            <Route path="/rules" element={<RulesZonesPage />} />
-            <Route path="/calibration" element={<CalibrationPage />} />
-            <Route path="/evaluation" element={<EvaluationPage />} />
-            <Route path="/privacy" element={<PrivacyAuditPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFoundPage />} />
+            <Route path="/" element={withBoundary(<LiveMonitorPage />, 'Live monitor error')} />
+            <Route path="/analyze" element={withBoundary(<AnalyzeFootagePage />, 'Footage analysis error')} />
+            <Route path="/incidents" element={withBoundary(<IncidentQueuePage />, 'Incident queue error')} />
+            <Route path="/incidents/:id" element={withBoundary(<IncidentDetailPage />, 'Incident details error')} />
+            <Route path="/approvals" element={withBoundary(<ApprovalsPage />, 'Approvals error')} />
+            <Route path="/map" element={withBoundary(<MapPatrolPage />, 'Campus map error')} />
+            <Route path="/cameras" element={withBoundary(<CamerasPage />, 'Camera registry error')} />
+            <Route path="/rules" element={withBoundary(<RulesZonesPage />, 'Rules & zones error')} />
+            <Route path="/calibration" element={withBoundary(<CalibrationPage />, 'Calibration error')} />
+            <Route path="/evaluation" element={withBoundary(<EvaluationPage />, 'Evaluation benchmark error')} />
+            <Route path="/privacy" element={withBoundary(<PrivacyAuditPage />, 'Privacy audit error')} />
+            <Route path="/settings" element={withBoundary(<SettingsPage />, 'Settings error')} />
+            <Route path="*" element={withBoundary(<NotFoundPage />, 'Page not found')} />
           </Route>
         </Routes>
 

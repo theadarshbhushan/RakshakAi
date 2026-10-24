@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
-import { getAccessToken } from '@/api/client'
+import { api, getAccessToken, setAccessToken } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import { useSoundStore } from '@/store/soundStore'
 
@@ -20,15 +20,31 @@ export function useWebSocket() {
   const { isAuthenticated } = useAuthStore()
   const { playAlertChime } = useSoundStore()
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!isAuthenticated) return
 
-    const token = getAccessToken()
+    let token = getAccessToken()
+    if (!token) {
+      try {
+        const refreshRes = await api.auth.refresh()
+        if (refreshRes && refreshRes.access_token) {
+          setAccessToken(refreshRes.access_token)
+          token = refreshRes.access_token
+        }
+      } catch (err) {
+        console.warn('WS auth refresh failed:', err)
+        return
+      }
+    }
+
     if (!token) return
 
     // Clear existing
     if (wsRef.current) {
-      wsRef.current.close()
+      try {
+        wsRef.current.close()
+      } catch {}
+      wsRef.current = null
     }
 
     setStatus('connecting')
@@ -64,22 +80,21 @@ export function useWebSocket() {
             case 'incident_escalated': {
               queryClient.invalidateQueries({ queryKey: ['incidents'] })
               queryClient.invalidateQueries({ queryKey: ['analytics'] })
+              queryClient.invalidateQueries({ queryKey: ['signals'] })
 
-              const severity = data.severity?.toLowerCase() || 'medium'
-              if (severity === 'critical' || severity === 'high') {
-                playAlertChime(severity)
-                const title = data.title_human || data.explanation_paragraph || 'New safety incident reported'
-                const zone = data.zone_id ? data.zone_id.replace(/_/g, ' ') : 'Zone'
-                
-                toast.error(`${severity === 'critical' ? 'Critical' : 'High priority'} · ${zone}`, {
-                  description: title,
-                  action: {
-                    label: 'Review now',
-                    onClick: () => navigate(`/incidents/${data.id || data._id}`),
-                  },
-                  duration: 8000,
-                })
-              }
+              const severity = (data?.severity || 'high').toLowerCase()
+              playAlertChime(severity)
+              const title = data?.title_human || data?.explanation_paragraph || 'New safety incident reported'
+              const zone = data?.zone_id ? data.zone_id.replace(/_/g, ' ') : 'Zone'
+
+              toast.error(`${severity === 'critical' ? 'Critical' : 'Alert'} · ${zone}`, {
+                description: title,
+                action: {
+                  label: 'Review now',
+                  onClick: () => navigate(`/incidents/${data?.id || data?._id}`),
+                },
+                duration: 8000,
+              })
               break
             }
 
@@ -87,7 +102,9 @@ export function useWebSocket() {
             case 'incident_reviewed':
             case 'incident_acknowledged':
               queryClient.invalidateQueries({ queryKey: ['incidents'] })
-              queryClient.invalidateQueries({ queryKey: ['incident', data.id || data._id] })
+              if (data?.id || data?._id) {
+                queryClient.invalidateQueries({ queryKey: ['incident', data.id || data._id] })
+              }
               queryClient.invalidateQueries({ queryKey: ['analytics'] })
               break
 
@@ -98,7 +115,7 @@ export function useWebSocket() {
             case 'camera_status':
             case 'camera_tamper':
               queryClient.invalidateQueries({ queryKey: ['cameras'] })
-              if (data.status === 'tampered' || data.is_blind_spot) {
+              if (data?.status === 'tampered' || data?.is_blind_spot) {
                 playAlertChime('high')
                 toast.warning(`Camera blind spot · ${data.name || data.camera_id}`, {
                   description: 'Camera video is degraded or covered. Audio sensitivity automatically raised.',
@@ -116,7 +133,6 @@ export function useWebSocket() {
               break
 
             default:
-              // Broad refresh for general events
               queryClient.invalidateQueries({ queryKey: ['incidents'] })
               break
           }
@@ -133,14 +149,26 @@ export function useWebSocket() {
         if (isAuthenticated) {
           const timeout = Math.min(1000 * Math.pow(1.5, retryCountRef.current), 10000)
           retryCountRef.current += 1
-          reconnectTimeoutRef.current = window.setTimeout(() => {
+          if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+          reconnectTimeoutRef.current = window.setTimeout(async () => {
+            try {
+              // Refresh token before reconnecting
+              const res = await api.auth.refresh()
+              if (res?.access_token) {
+                setAccessToken(res.access_token)
+              }
+            } catch (err) {
+              console.warn('WS token refresh error:', err)
+            }
             connect()
           }, timeout)
         }
       }
 
       ws.onerror = () => {
-        ws.close()
+        try {
+          ws.close()
+        } catch {}
       }
     } catch {
       setStatus('disconnected')
