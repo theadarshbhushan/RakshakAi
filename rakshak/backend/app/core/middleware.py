@@ -32,11 +32,31 @@ class RequestIdAndSecurityHeadersMiddleware(BaseHTTPMiddleware):
         process_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         # 3. Add Response Security Headers
+        path = request.url.path
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
+
+        # Check documentation and schema paths that require CDN assets or relaxed framing
+        norm_path = path.rstrip("/") if path != "/" else "/"
+        docs_paths = {"/docs", "/redoc"}
+        skip_csp_paths = {"/docs/oauth2-redirect", "/openapi.json", "/api/v1/openapi.json"}
+
+        if norm_path in docs_paths:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com; "
+                "connect-src 'self'"
+            )
+            # Do not set X-Frame-Options for Swagger UI / Redoc to avoid blocking framing
+        elif norm_path in skip_csp_paths:
+            # Skip strict API CSP and X-Frame-Options for openapi schema and oauth redirect
+            pass
+        else:
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["Content-Security-Policy"] = "default-src 'self'"
 
         if settings.ENV == "prod":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

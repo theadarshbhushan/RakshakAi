@@ -275,3 +275,31 @@ async def test_health_endpoints(client: AsyncClient):
     assert ready_res.status_code == 200
     assert ready_res.json()["status"] == "ready"
     assert ready_res.json()["database"]["connected"] is True
+
+
+# =============================================================================
+# 10. Swagger UI /docs vs Strict API CSP and Security Headers
+# =============================================================================
+@pytest.mark.asyncio
+async def test_docs_security_headers_and_csp(client: AsyncClient):
+    # GET /docs returns 200 and its CSP header includes cdn.jsdelivr.net
+    docs_res = await client.get("/docs")
+    assert docs_res.status_code == 200
+    docs_csp = docs_res.headers.get("Content-Security-Policy", "")
+    assert "https://cdn.jsdelivr.net" in docs_csp
+    assert "https://fastapi.tiangolo.com" in docs_csp
+    assert "X-Frame-Options" not in docs_res.headers
+
+    # /redoc also allows CDN assets
+    redoc_res = await client.get("/redoc")
+    assert redoc_res.status_code == 200
+    redoc_csp = redoc_res.headers.get("Content-Security-Policy", "")
+    assert "https://cdn.jsdelivr.net" in redoc_csp
+
+    # /api/v1/health/live keeps the strict API CSP and X-Frame-Options: DENY
+    live_res = await client.get("/api/v1/health/live")
+    assert live_res.status_code == 200
+    live_csp = live_res.headers.get("Content-Security-Policy", "")
+    assert live_csp == "default-src 'self'"
+    assert live_res.headers.get("X-Frame-Options") == "DENY"
+
