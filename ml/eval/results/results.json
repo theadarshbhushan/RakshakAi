@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-24T19:31:19.514241+00:00",
+  "timestamp": "2026-10-24T19:39:52.369902+00:00",
   "tasks": {
     "audio_distress": {
       "status": "evaluated",
@@ -106,7 +106,7 @@
           }
         }
       },
-      "latency_per_sec_media": 0.0306,
+      "latency_per_sec_media": 0.0317,
       "samples": [
         {
           "file": "raw_datasets/ESC-50-master/audio/1-20133-A-39.wav",
@@ -594,7 +594,7 @@
           "negatives": 5
         }
       },
-      "latency_per_sec_media": 0.4266,
+      "latency_per_sec_media": 0.5841,
       "samples": [
         {
           "file": "raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4",
@@ -938,7 +938,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.2643,
+      "latency_per_sec_media": 0.3933,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
@@ -989,7 +989,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.2695,
+      "latency_per_sec_media": 0.375,
       "samples": [
         {
           "file": "videos/tailgating/tailgate_01.mp4",
@@ -1040,7 +1040,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.2748,
+      "latency_per_sec_media": 0.375,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
