@@ -12,13 +12,13 @@ export const AppShell: React.FC = () => {
   return (
     <div className="min-h-screen bg-page flex flex-row font-sans text-content-body antialiased">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <aside className="hidden lg:block no-print">
         <Sidebar />
-      </div>
+      </aside>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <div className="fixed inset-0 z-50 flex lg:hidden no-print">
           <div
             className="fixed inset-0 bg-content-primary/30 backdrop-blur-[1px]"
             onClick={() => setMobileMenuOpen(false)}
@@ -39,10 +39,12 @@ export const AppShell: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        <TopBar
-          wsStatus={status}
-          onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
-        />
+        <div className="no-print">
+          <TopBar
+            wsStatus={status}
+            onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
+          />
+        </div>
 
         <main className="flex-1 p-6 md:p-9 max-w-7xl w-full mx-auto">
           <Outlet />

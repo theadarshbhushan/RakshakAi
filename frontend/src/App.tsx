@@ -19,6 +19,7 @@ import { CalibrationPage } from '@/pages/CalibrationPage'
 import { EvaluationPage } from '@/pages/EvaluationPage'
 import { PrivacyAuditPage } from '@/pages/PrivacyAuditPage'
 import { SettingsPage } from '@/pages/SettingsPage'
+import { SosQrPage } from '@/pages/SosQrPage'
 import { StudentSosPage } from '@/pages/StudentSosPage'
 import { StudentTransparencyPage } from '@/pages/StudentTransparencyPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -94,6 +95,7 @@ export function App() {
             <Route path="/evaluation" element={withBoundary(<EvaluationPage />, 'Evaluation benchmark error')} />
             <Route path="/privacy" element={withBoundary(<PrivacyAuditPage />, 'Privacy audit error')} />
             <Route path="/settings" element={withBoundary(<SettingsPage />, 'Settings error')} />
+            <Route path="/settings/sos-qr" element={withBoundary(<SosQrPage />, 'SOS QR code error')} />
             <Route path="*" element={withBoundary(<NotFoundPage />, 'Page not found')} />
           </Route>
         </Routes>

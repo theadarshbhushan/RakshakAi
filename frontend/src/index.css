@@ -66,3 +66,30 @@
 .animate-critical-pulse {
   animation: critical-pulse 2s infinite ease-in-out;
 }
+
+/* Print styles */
+@media print {
+  .no-print,
+  aside,
+  header,
+  nav,
+  button,
+  .print-hidden {
+    display: none !important;
+  }
+
+  body,
+  main,
+  #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Settings as SettingsIcon,
@@ -11,7 +12,7 @@ import {
   Printer,
   Key,
 } from 'lucide-react'
-import { api, getAccessToken } from '@/api/client'
+import { api } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import { useSoundStore } from '@/store/soundStore'
 import { Button } from '@/components/ui/Button'
@@ -20,6 +21,7 @@ import { Input } from '@/components/ui/Input'
 import { toast } from 'sonner'
 
 export const SettingsPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user, org } = useAuthStore()
   const { soundEnabled, toggleSound } = useSoundStore()
   const isOwnerOrAdmin = user?.role === 'owner' || user?.role === 'admin'
@@ -51,9 +53,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   const handlePrintQrSheet = () => {
-    const token = getAccessToken()
-    const url = `/api/v1/sos/qr-sheet${token ? `?token=${encodeURIComponent(token)}` : ''}`
-    window.open(url, '_blank')
+    navigate('/settings/sos-qr')
   }
 
   return (

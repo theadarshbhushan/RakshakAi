@@ -147,6 +147,73 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
   return response.json()
 }
 
+export async function apiFetchBlob(endpoint: string, options: RequestOptions = {}): Promise<Blob> {
+  const { params, headers = {}, ...rest } = options
+
+  let url = endpoint
+  if (params) {
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null) {
+        searchParams.append(key, String(val))
+      }
+    })
+    const queryString = searchParams.toString()
+    if (queryString) {
+      url += (url.includes('?') ? '&' : '?') + queryString
+    }
+  }
+
+  const reqHeaders: Record<string, string> = {
+    Accept: 'image/*, */*',
+    ...(headers as Record<string, string>),
+  }
+
+  if (inMemoryToken && !reqHeaders['Authorization']) {
+    reqHeaders['Authorization'] = `Bearer ${inMemoryToken}`
+  }
+
+  let response = await fetch(url, {
+    ...rest,
+    headers: reqHeaders,
+    credentials: 'include',
+  })
+
+  // Handle 401 Auto-refresh
+  if (response.status === 401) {
+    try {
+      const refreshRes = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      })
+      if (refreshRes.ok) {
+        const data: TokenResponse = await refreshRes.json()
+        setAccessToken(data.access_token)
+        reqHeaders['Authorization'] = `Bearer ${data.access_token}`
+        response = await fetch(url, {
+          ...rest,
+          headers: reqHeaders,
+          credentials: 'include',
+        })
+      }
+    } catch {}
+  }
+
+  if (!response.ok) {
+    let errorDetail = 'Failed to fetch resource'
+    try {
+      const errJson = await response.json()
+      errorDetail = errJson.error?.message || errJson.detail || JSON.stringify(errJson)
+    } catch {
+      errorDetail = `${response.status} ${response.statusText}`
+    }
+    throw new Error(errorDetail)
+  }
+
+  return response.blob()
+}
+
 export const api = {
   // Auth
   auth: {
@@ -510,6 +577,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
     getQr: (zoneId: string) => apiFetch<any>(`/api/v1/sos/qr/${zoneId}`),
+    getZoneQrBlob: (zoneId: string) => apiFetchBlob(`/api/v1/sos/qr/${encodeURIComponent(zoneId)}`),
     getQrSheet: () => apiFetch<any>('/api/v1/sos/qr-sheet'),
     rotate: (zoneId: string) =>
       apiFetch<{ zone_id: string; new_token: string }>(`/api/v1/sos/rotate/${zoneId}`, {

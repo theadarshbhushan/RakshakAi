@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -10,18 +10,192 @@ import {
   ShieldAlert,
   Info,
   Maximize2,
+  Download,
+  ShieldCheck,
+  AlertCircle,
+  QrCode,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Modal } from '@/components/ui/Modal'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { SeverityDot } from '@/components/ui/SeverityDot'
 import { StatStrip } from '@/components/ui/StatStrip'
+import { toast } from 'sonner'
+import type { Zone } from '@/api/types'
+
+interface ZoneDetailModalProps {
+  zoneId: string | null
+  onClose: () => void
+  zones: Zone[]
+}
+
+const ZoneDetailModal: React.FC<ZoneDetailModalProps> = ({ zoneId, onClose, zones }) => {
+  const navigate = useNavigate()
+  const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [blob, setBlob] = useState<Blob | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const zone = zones.find((z) => z.zone_id === zoneId)
+  const zoneName = zone?.name || (zoneId ? zoneId.replace(/_/g, ' ') : 'Zone')
+
+  useEffect(() => {
+    if (!zoneId) {
+      setQrUrl(null)
+      setBlob(null)
+      return
+    }
+
+    let active = true
+    let createdUrl: string | null = null
+
+    setIsLoading(true)
+    setError(null)
+
+    api.sos.getZoneQrBlob(zoneId)
+      .then((dataBlob) => {
+        if (!active) return
+        createdUrl = URL.createObjectURL(dataBlob)
+        setBlob(dataBlob)
+        setQrUrl(createdUrl)
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        if (!active) return
+        setError(err.message || 'Failed to generate QR')
+        setIsLoading(false)
+      })
+
+    return () => {
+      active = false
+      if (createdUrl) {
+        URL.revokeObjectURL(createdUrl)
+      }
+    }
+  }, [zoneId])
+
+  const handleDownload = () => {
+    if (!blob || !zoneId) {
+      toast.error('QR code is still loading')
+      return
+    }
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `sos-qr-${zoneId}.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast.success(`Downloaded SOS QR for ${zoneName}`)
+  }
+
+  if (!zoneId) return null
+
+  return (
+    <Modal
+      isOpen={!!zoneId}
+      onClose={onClose}
+      title={zoneName}
+      description={`Zone ID: ${zoneId} · ${zone?.type ? zone.type.toUpperCase() : 'HOSTEL ZONE'}`}
+      maxWidth="md"
+    >
+      <div className="space-y-4">
+        {/* Student SOS QR Code Poster View */}
+        <div className="bg-white rounded-[12px] border-2 border-border-card p-5 flex flex-col items-center text-center shadow-soft">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono text-primary uppercase tracking-wider mb-1">
+            <ShieldCheck size={14} />
+            <span>Student Anonymous SOS Code</span>
+          </div>
+
+          <div className="my-2 p-2 bg-white rounded-[8px] flex items-center justify-center min-h-[170px]">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-6 text-content-muted">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-[12px]">Generating zone QR…</span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-6 text-status-high">
+                <AlertCircle size={22} />
+                <span className="text-[12px]">{error}</span>
+              </div>
+            ) : qrUrl ? (
+              <img
+                src={qrUrl}
+                alt={`SOS QR code for ${zoneName}`}
+                className="w-40 h-40 object-contain shadow-soft"
+              />
+            ) : null}
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-border-divider w-full space-y-1">
+            <p className="text-[14px] font-bold text-content-primary">
+              Feeling unsafe? Scan for help. Anonymous.
+            </p>
+            <p className="text-[11px] text-content-secondary leading-tight">
+              Scanned on smartphone by students in this zone to trigger silent alerts.
+            </p>
+          </div>
+
+          <div className="mt-3 pt-2 border-t border-border-divider/50 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isLoading || !blob}
+              className="inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:underline disabled:opacity-50"
+            >
+              <Download size={13} />
+              Download PNG
+            </button>
+            <span className="text-content-muted text-[11px]">·</span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                navigate('/settings/sos-qr')
+              }}
+              className="inline-flex items-center gap-1 text-[12px] font-medium text-content-secondary hover:text-content-primary hover:underline"
+            >
+              <Printer size={13} />
+              Print all posters
+            </button>
+          </div>
+        </div>
+
+        {/* Modal footer actions */}
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              onClose()
+              navigate(`/incidents?zone=${zoneId}`)
+            }}
+          >
+            View incidents for this zone
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 export const MapPatrolPage: React.FC = () => {
   const navigate = useNavigate()
   const [heatmapMode, setHeatmapMode] = useState<'raw' | 'verified'>('raw')
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
+
+  // Fetch Zones
+  const { data: zones = [] } = useQuery({
+    queryKey: ['zones_list'],
+    queryFn: () => api.zones.list(),
+  })
 
   // Fetch Heatmap data
   const { data: heatmapData } = useQuery({
@@ -147,35 +321,53 @@ export const MapPatrolPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {/* Back Wall Perimeter (thick boundary line) */}
               <div
-                onClick={() => navigate('/incidents?zone=back_wall')}
+                onClick={() => setSelectedZone('back_wall')}
                 className="col-span-1 p-3.5 rounded-card bg-card border-4 border-dashed border-[#5C5F66] flex flex-col justify-between cursor-pointer hover:bg-fill-active transition-all"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-bold text-content-primary">Back Wall</span>
-                  <span className="text-[10px] font-mono text-content-muted">PERIMETER</span>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[13px] font-bold text-content-primary">Back Wall</span>
+                    <span className="text-[10px] font-mono text-content-muted">PERIMETER</span>
+                  </div>
+                  <p className="text-[11px] text-content-muted mt-2">
+                    Thick boundary line · Infrared tripwire active
+                  </p>
                 </div>
-                <p className="text-[11px] text-content-muted mt-2">
-                  Thick boundary line · Infrared tripwire active
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-primary font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR
+                  </span>
+                  <span className="text-content-muted text-[10px]">Details →</span>
+                </div>
               </div>
 
               {/* Terrace Rooftop (Critical Pulsing) */}
               <div
-                onClick={() => navigate('/incidents?zone=terrace')}
+                onClick={() => setSelectedZone('terrace')}
                 className="col-span-3 p-4 rounded-card bg-card border-2 border-critical shadow-soft cursor-pointer hover:bg-critical-tint/30 transition-all flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-critical animate-critical-pulse" />
-                    <span className="text-[14px] font-bold text-content-primary">Terrace Rooftop</span>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-critical animate-critical-pulse" />
+                      <span className="text-[14px] font-bold text-content-primary">Terrace Rooftop</span>
+                    </div>
+                    <span className="text-[12px] font-mono text-critical font-semibold">
+                      6 active alerts
+                    </span>
                   </div>
-                  <span className="text-[12px] font-mono text-critical font-semibold">
-                    6 active alerts
-                  </span>
+                  <p className="text-[12px] text-content-body mt-2">
+                    Curfew breach detected. Camera, microphone and door log agree.
+                  </p>
                 </div>
-                <p className="text-[12px] text-content-body mt-2">
-                  Curfew breach detected. Camera, microphone and door log agree.
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-critical font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR Code
+                  </span>
+                  <span className="text-content-muted text-[10px]">Tap to view details →</span>
+                </div>
               </div>
             </div>
           </div>
@@ -188,39 +380,57 @@ export const MapPatrolPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Corridor 2F */}
               <div
-                onClick={() => navigate('/incidents?zone=corridor_2f')}
+                onClick={() => setSelectedZone('corridor_2f')}
                 className="md:col-span-2 p-3.5 rounded-card bg-card border border-border-card cursor-pointer hover:bg-fill-active transition-all flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-status-low" />
-                    <span className="text-[13px] font-semibold text-content-primary">
-                      Corridor 2F South
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-status-low" />
+                      <span className="text-[13px] font-semibold text-content-primary">
+                        Corridor 2F South
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-content-secondary">
+                      1 alert (tailgating)
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-content-secondary">
-                    1 alert (tailgating)
-                  </span>
+                  <p className="text-[11px] text-content-muted mt-2">
+                    Dorm rooms 201–224 · Passive PIR & video motion active
+                  </p>
                 </div>
-                <p className="text-[11px] text-content-muted mt-2">
-                  Dorm rooms 201–224 · Passive PIR & video motion active
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-primary font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR
+                  </span>
+                  <span className="text-content-muted text-[10px]">Details →</span>
+                </div>
               </div>
 
               {/* Server Room */}
               <div
-                onClick={() => navigate('/incidents?zone=server_room')}
+                onClick={() => setSelectedZone('server_room')}
                 className="p-3.5 rounded-card bg-card border border-border-card cursor-pointer hover:bg-fill-active transition-all flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-semibold text-content-primary">
-                    Server Infrastructure
-                  </span>
-                  <span className="text-[10px] text-status-healthy font-medium">Quiet</span>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[13px] font-semibold text-content-primary">
+                      Server Infrastructure
+                    </span>
+                    <span className="text-[10px] text-status-healthy font-medium">Quiet</span>
+                  </div>
+                  <p className="text-[11px] text-content-muted mt-2">
+                    Keycard swipe required
+                  </p>
                 </div>
-                <p className="text-[11px] text-content-muted mt-2">
-                  Keycard swipe required
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-primary font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR
+                  </span>
+                  <span className="text-content-muted text-[10px]">Details →</span>
+                </div>
               </div>
             </div>
           </div>
@@ -233,44 +443,62 @@ export const MapPatrolPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Block B Turnstile Gate */}
               <div
-                onClick={() => navigate('/incidents?zone=block_b_entry')}
+                onClick={() => setSelectedZone('block_b_entry')}
                 className="p-4 rounded-card bg-card border border-status-high shadow-soft cursor-pointer hover:bg-status-high-tint/30 transition-all flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-status-high" />
-                    <span className="text-[14px] font-bold text-content-primary">
-                      Block B Main Turnstile Entry
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-status-high" />
+                      <span className="text-[14px] font-bold text-content-primary">
+                        Block B Main Turnstile Entry
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-status-high font-semibold">
+                      3 active alerts
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-status-high font-semibold">
-                    3 active alerts
-                  </span>
+                  <p className="text-[12px] text-content-body mt-2">
+                    Tailgating verification & recent student SOS report.
+                  </p>
                 </div>
-                <p className="text-[12px] text-content-body mt-2">
-                  Tailgating verification & recent student SOS report.
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-status-high font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR Code
+                  </span>
+                  <span className="text-content-muted text-[10px]">Tap to view details →</span>
+                </div>
               </div>
 
               {/* Common Room */}
               <div
-                onClick={() => navigate('/incidents?zone=common_room')}
+                onClick={() => setSelectedZone('common_room')}
                 className="p-4 rounded-card bg-card border border-status-medium cursor-pointer hover:bg-status-medium-tint/30 transition-all flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-status-medium" />
-                    <span className="text-[14px] font-semibold text-content-primary">
-                      Common Recreation Lounge
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-status-medium" />
+                      <span className="text-[14px] font-semibold text-content-primary">
+                        Common Recreation Lounge
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-content-secondary">
+                      3 active alerts
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-content-secondary">
-                    3 active alerts
-                  </span>
+                  <p className="text-[12px] text-content-muted mt-2">
+                    Acoustic context filter suppresses harmless laughter.
+                  </p>
                 </div>
-                <p className="text-[12px] text-content-muted mt-2">
-                  Acoustic context filter suppresses harmless laughter.
-                </p>
+                <div className="mt-2.5 pt-1.5 border-t border-border-divider/50 flex items-center justify-between text-[11px] text-primary font-medium">
+                  <span className="flex items-center gap-1">
+                    <QrCode size={12} />
+                    SOS QR Code
+                  </span>
+                  <span className="text-content-muted text-[10px]">Tap to view details →</span>
+                </div>
               </div>
             </div>
           </div>
@@ -439,6 +667,13 @@ export const MapPatrolPage: React.FC = () => {
           ))}
         </div>
       </Card>
+
+      {/* Zone Detail Modal with SOS QR Code */}
+      <ZoneDetailModal
+        zoneId={selectedZone}
+        onClose={() => setSelectedZone(null)}
+        zones={zones}
+      />
     </div>
   )
 }
