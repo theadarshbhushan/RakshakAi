@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # Rate Limiting & Detection
     RATE_LIMIT_LOGIN: str = Field(default="5/minute")
     DETECTOR_MODE: str = Field(default="mock", description="mock | real")
-    FIGHT_DETECTION: bool = Field(default=False, description="Enable experimental fight detection heuristic")
+    FIGHT_DETECTION: bool = Field(default=True, description="Enable experimental fight detection heuristic")
     AUDIO_CLASSIFIER: str = Field(default="yamnet", description="yamnet | yamnet_head")
     HELP_KEYWORDS: bool = Field(default=False, description="Spot emergency keywords via speech model")
 

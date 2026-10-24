@@ -124,12 +124,99 @@ async def test_sos_corroborated_by_distress_audio_becomes_critical(client: Async
     assert "report" in fused_incident.modalities
     assert "audio" in fused_incident.modalities
 
-    # Explanation narrative verification
     explanation = fused_incident.explanation
     assert "Student SOS report (fight)" in explanation
     assert "corroborated by distress audio" in explanation
     assert "Screaming 0.78" in explanation or "screaming" in explanation.lower()
     assert "8 s later" in explanation
+
+
+@pytest.mark.asyncio
+async def test_fight_alone_and_corroboration_incident_flow():
+    """Verify fight alone creates at most LOW incident, and escalates with SOS or audio."""
+    zone = await Zone.find_one({"zone_id": "terrace"})
+    if not zone:
+        zone = await Zone.find_one()
+    assert zone is not None
+
+    active_rules = await RuleDocument.find_one({"org_id": zone.org_id, "is_active": True})
+    rules_dict = active_rules.model_dump() if active_rules else {}
+    fusion_engine = FusionEngine(zone.org_id, rules_dict)
+
+    now = datetime.now(timezone.utc) + timedelta(hours=2)
+
+    # 1. Fight signal alone -> LOW severity with unverified/experimental explanation
+    fight_sig = Signal(
+        org_id=zone.org_id,
+        site_id=zone.site_id,
+        modality="video",
+        kind="fight",
+        zone_id=zone.zone_id,
+        camera_id="cam_terrace",
+        score=0.75,
+        threshold=0.65,
+        ts=now,
+        source="video_yolov8_pose",
+    )
+    inc_alone = await fusion_engine.ingest_signal(fight_sig)
+    assert inc_alone is not None
+    assert inc_alone.severity == "low"
+    assert "Possible altercation (experimental, unverified)" in inc_alone.explanation
+    assert "experimental" in inc_alone.explanation
+
+    # 2. Corroborate with student SOS in same zone -> escalates to HIGH
+    sos_sig = Signal(
+        org_id=zone.org_id,
+        site_id=zone.site_id,
+        modality="report",
+        kind="student_sos",
+        zone_id=zone.zone_id,
+        score=0.9,
+        threshold=0.5,
+        details={"type": "fight", "note": "altercation near stairs"},
+        ts=now + timedelta(seconds=5),
+        source="student_sos_qr",
+    )
+    fused_sos = await fusion_engine.ingest_signal(sos_sig)
+    assert fused_sos is not None
+    assert str(fused_sos.id) == str(inc_alone.id)
+    assert fused_sos.severity == "high"
+    assert "experimental" in fused_sos.explanation
+
+    # 3. New incident: Fight + Distress Audio in same zone -> escalates to CRITICAL
+    fight_sig2 = Signal(
+        org_id=zone.org_id,
+        site_id=zone.site_id,
+        modality="video",
+        kind="fight",
+        zone_id=zone.zone_id,
+        camera_id="cam_terrace",
+        score=0.82,
+        threshold=0.65,
+        ts=now + timedelta(seconds=60),
+        source="video_yolov8_pose",
+    )
+    inc2 = await fusion_engine.ingest_signal(fight_sig2)
+    assert inc2 is not None
+    assert inc2.severity == "low"
+
+    audio_sig2 = Signal(
+        org_id=zone.org_id,
+        site_id=zone.site_id,
+        modality="audio",
+        kind="distress_audio",
+        zone_id=zone.zone_id,
+        score=0.85,
+        threshold=0.35,
+        details={"label": "screaming"},
+        ts=now + timedelta(seconds=64),
+        source="audio_yfh_resnet",
+    )
+    fused_audio = await fusion_engine.ingest_signal(audio_sig2)
+    assert fused_audio is not None
+    assert str(fused_audio.id) == str(inc2.id)
+    assert fused_audio.severity == "critical"
+    assert "experimental" in fused_audio.explanation
 
 
 @pytest.mark.asyncio

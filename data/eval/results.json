@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-24T19:39:52.369902+00:00",
+  "timestamp": "2026-10-24T20:16:40.235670+00:00",
   "tasks": {
     "audio_distress": {
       "status": "evaluated",
@@ -106,7 +106,7 @@
           }
         }
       },
-      "latency_per_sec_media": 0.0317,
+      "latency_per_sec_media": 0.0306,
       "samples": [
         {
           "file": "raw_datasets/ESC-50-master/audio/1-20133-A-39.wav",
@@ -580,28 +580,28 @@
       },
       "metrics": {
         "status": "evaluated",
-        "tp": 4,
-        "fp": 4,
-        "tn": 1,
-        "fn": 1,
-        "precision": 0.5,
-        "recall": 0.8,
-        "f1": 0.6154,
-        "fpr": 0.8,
+        "tp": 3,
+        "fp": 2,
+        "tn": 3,
+        "fn": 2,
+        "precision": 0.6,
+        "recall": 0.6,
+        "f1": 0.6,
+        "fpr": 0.4,
         "sample_counts": {
           "total": 10,
           "positives": 5,
           "negatives": 5
         }
       },
-      "latency_per_sec_media": 0.5841,
+      "latency_per_sec_media": 0.4258,
       "samples": [
         {
           "file": "raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4",
           "filename": "V_1.mp4",
           "task": "fight",
           "zone_id": "terrace",
-          "score": 0.798,
+          "score": 0.721,
           "predicted": 1,
           "expected": 1,
           "result": "TP",
@@ -649,10 +649,10 @@
           "filename": "V_5.mp4",
           "task": "fight",
           "zone_id": "terrace",
-          "score": 0.488,
-          "predicted": 1,
+          "score": 0.0,
+          "predicted": 0,
           "expected": 1,
-          "result": "TP",
+          "result": "FN",
           "is_hard_negative": false,
           "source": "rlvs"
         },
@@ -673,10 +673,10 @@
           "filename": "NV_2.mp4",
           "task": "fight",
           "zone_id": "terrace",
-          "score": 0.859,
-          "predicted": 1,
+          "score": 0.0,
+          "predicted": 0,
           "expected": 0,
-          "result": "FP",
+          "result": "TN",
           "is_hard_negative": false,
           "source": "rlvs"
         },
@@ -685,10 +685,10 @@
           "filename": "NV_3.mp4",
           "task": "fight",
           "zone_id": "terrace",
-          "score": 0.659,
-          "predicted": 1,
+          "score": 0.0,
+          "predicted": 0,
           "expected": 0,
-          "result": "FP",
+          "result": "TN",
           "is_hard_negative": false,
           "source": "rlvs"
         },
@@ -875,7 +875,7 @@
           }
         }
       },
-      "latency_per_sec_media": 0.0195,
+      "latency_per_sec_media": 0.0196,
       "samples": [
         {
           "file": "audio/distress/distress_01.wav",
@@ -924,13 +924,13 @@
       },
       "metrics": {
         "status": "evaluated",
-        "tp": 1,
+        "tp": 0,
         "fp": 0,
         "tn": 1,
-        "fn": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "fpr": 0.0,
         "sample_counts": {
           "total": 2,
@@ -938,17 +938,17 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.3933,
+      "latency_per_sec_media": 0.2408,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
           "filename": "intrusion_01.mp4",
           "task": "loitering",
           "zone_id": "corridor_1",
-          "score": 0.88,
-          "predicted": 1,
+          "score": 0.0,
+          "predicted": 0,
           "expected": 1,
-          "result": "TP",
+          "result": "FN",
           "is_hard_negative": false,
           "source": "synthetic"
         },
@@ -989,7 +989,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.375,
+      "latency_per_sec_media": 0.267,
       "samples": [
         {
           "file": "videos/tailgating/tailgate_01.mp4",
@@ -1040,7 +1040,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.375,
+      "latency_per_sec_media": 0.2656,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
@@ -1617,7 +1617,7 @@
       "filename": "V_1.mp4",
       "task": "fight",
       "zone_id": "terrace",
-      "score": 0.798,
+      "score": 0.721,
       "predicted": 1,
       "expected": 1,
       "result": "TP",
@@ -1665,10 +1665,10 @@
       "filename": "V_5.mp4",
       "task": "fight",
       "zone_id": "terrace",
-      "score": 0.488,
-      "predicted": 1,
+      "score": 0.0,
+      "predicted": 0,
       "expected": 1,
-      "result": "TP",
+      "result": "FN",
       "is_hard_negative": false,
       "source": "rlvs"
     },
@@ -1689,10 +1689,10 @@
       "filename": "NV_2.mp4",
       "task": "fight",
       "zone_id": "terrace",
-      "score": 0.859,
-      "predicted": 1,
+      "score": 0.0,
+      "predicted": 0,
       "expected": 0,
-      "result": "FP",
+      "result": "TN",
       "is_hard_negative": false,
       "source": "rlvs"
     },
@@ -1701,10 +1701,10 @@
       "filename": "NV_3.mp4",
       "task": "fight",
       "zone_id": "terrace",
-      "score": 0.659,
-      "predicted": 1,
+      "score": 0.0,
+      "predicted": 0,
       "expected": 0,
-      "result": "FP",
+      "result": "TN",
       "is_hard_negative": false,
       "source": "rlvs"
     },

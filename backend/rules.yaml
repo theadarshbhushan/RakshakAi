@@ -15,7 +15,7 @@ zones:
     thresholds:
       zone_intrusion: 0.50
       distress_audio: 0.35
-      fight: 0.60
+      fight: 0.65
   server_room:
     type: restricted
     allowed_roles:
@@ -24,7 +24,7 @@ zones:
     thresholds:
       zone_intrusion: 0.50
       distress_audio: 0.35
-      fight: 0.60
+      fight: 0.65
   block_b_entry:
     type: entry
     allowed_roles:
@@ -38,7 +38,7 @@ zones:
     thresholds:
       zone_intrusion: 0.50
       distress_audio: 0.35
-      fight: 0.60
+      fight: 0.65
   common_room:
     type: common
     allowed_roles:
@@ -51,7 +51,7 @@ zones:
     thresholds:
       zone_intrusion: 0.50
       distress_audio: 0.35
-      fight: 0.60
+      fight: 0.65
   corridor_2f:
     type: corridor
     allowed_roles:
@@ -64,7 +64,7 @@ zones:
     thresholds:
       zone_intrusion: 0.50
       distress_audio: 0.35
-      fight: 0.60
+      fight: 0.65
 
 tailgating:
   window_seconds: 5

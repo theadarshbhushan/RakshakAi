@@ -138,7 +138,7 @@ class IncidentService:
         current_thresholds = zone_rules.get("thresholds", {
             "zone_intrusion": 0.50,
             "distress_audio": 0.35,
-            "fight": 0.60,
+            "fight": 0.65,
         })
 
         now = utc_now()

@@ -173,3 +173,53 @@ def test_fusion_loitering_video_weight():
     assert comp == pytest.approx(0.765, 0.01)
     sev = fusion.determine_severity([loiter_signal], comp)
     assert sev == "medium"
+
+
+def test_fusion_fight_alone_and_corroboration_rules():
+    """Verify fight alone creates at most LOW severity, and escalates properly."""
+    fusion = FusionEngine(org_id="test_org", rules_config={})
+
+    fight_sig = Signal(
+        org_id="test_org",
+        ts=datetime.now(timezone.utc),
+        modality="video",
+        kind="fight",
+        zone_id="terrace",
+        score=0.85,
+        threshold=0.65,
+    )
+    audio_sig = Signal(
+        org_id="test_org",
+        ts=datetime.now(timezone.utc),
+        modality="audio",
+        kind="distress_audio",
+        zone_id="terrace",
+        score=0.80,
+        threshold=0.35,
+    )
+    sos_sig = Signal(
+        org_id="test_org",
+        ts=datetime.now(timezone.utc),
+        modality="report",
+        kind="student_sos",
+        zone_id="terrace",
+        score=0.90,
+        threshold=0.50,
+        details={"type": "fight"},
+    )
+
+    # 1. Fight alone -> at most LOW severity
+    comp_alone = fusion.calculate_composite_score([fight_sig])
+    sev_alone = fusion.determine_severity([fight_sig], comp_alone)
+    assert sev_alone == "low"
+
+    # 2. Fight + Distress audio -> CRITICAL
+    comp_fa = fusion.calculate_composite_score([fight_sig, audio_sig])
+    sev_fa = fusion.determine_severity([fight_sig, audio_sig], comp_fa)
+    assert sev_fa == "critical"
+
+    # 3. Fight + Student SOS -> HIGH
+    comp_fs = fusion.calculate_composite_score([fight_sig, sos_sig])
+    sev_fs = fusion.determine_severity([fight_sig, sos_sig], comp_fs)
+    assert sev_fs == "high"
+

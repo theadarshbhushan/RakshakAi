@@ -19,10 +19,10 @@ heuristics:
     curfew_end: "05:30"
 
   fight:
-    enabled_by_default: false
+    enabled_by_default: true
     center_dist_box_width_multiplier: 1.2
     normalized_wrist_speed_threshold: 1.8
-    duration_seconds: 1.0
+    duration_seconds: 1.5
 
   tamper:
     brightness_min: 15.0

@@ -75,12 +75,21 @@ class FusionEngine:
         modalities = set(s.modality for s in active_signals)
         kinds = set(s.kind for s in active_signals)
 
-        # SOS corroborated by video or audio in same zone within fusion window -> critical
-        if "student_sos" in kinds and ("video" in modalities or "audio" in modalities):
+        # Fight + distress audio in same zone -> critical (existing rule)
+        if "fight" in kinds and "distress_audio" in kinds:
             return "critical"
 
-        if len(modalities) >= 3 or ("fight" in kinds and "distress_audio" in kinds):
+        # SOS corroborated by audio or non-fight video in same zone -> critical
+        non_fight_video = any(s.modality == "video" and s.kind != "fight" for s in active_signals)
+        if "student_sos" in kinds and ("audio" in modalities or non_fight_video):
             return "critical"
+
+        if len(modalities) >= 3:
+            return "critical"
+
+        # Fight + student SOS -> high
+        if "fight" in kinds and "student_sos" in kinds:
+            return "high"
 
         # Blind spot compensation: any student SOS or access violation in a blind spot zone is at least high severity
         access_kinds = {"restricted_access", "curfew_violation", "tailgating"}
@@ -90,6 +99,10 @@ class FusionEngine:
         # SOS alone creates at least a high-severity incident
         if "student_sos" in kinds:
             return "high"
+
+        # Fight signal ALONE creates at most a LOW severity incident
+        if kinds == {"fight"}:
+            return "low"
 
         if len(modalities) == 2:
             return "high"
@@ -108,6 +121,8 @@ class FusionEngine:
         """
         Generate explainable narrative detailing all corroborating and suppressed signals.
         """
+        active_signals = [s for s in signals if not s.suppressed]
+        kinds = set(s.kind for s in active_signals)
         sorted_signals = sorted(signals, key=lambda s: ensure_utc(s.ts))
         narrative_parts: List[str] = []
         base_time: Optional[datetime] = None
@@ -155,12 +170,17 @@ class FusionEngine:
                     )
             elif s.kind == "fight":
                 if idx == 0:
-                    narrative_parts.append(
-                        f"Physical fight detected in zone '{zone_name}' at {t_str} (score {s.score:.2f})"
-                    )
+                    if len(active_signals) == 1 or kinds == {"fight"}:
+                        narrative_parts.append(
+                            f"Possible altercation (experimental, unverified) detected in zone '{zone_name}' at {t_str} (score {s.score:.2f})"
+                        )
+                    else:
+                        narrative_parts.append(
+                            f"Physical fight detected (experimental) in zone '{zone_name}' at {t_str} (score {s.score:.2f})"
+                        )
                 else:
                     narrative_parts.append(
-                        f"corroborated by physical fight in zone '{zone_name}' (score {s.score:.2f}){diff_text}"
+                        f"corroborated by physical fight (experimental) in zone '{zone_name}' (score {s.score:.2f}){diff_text}"
                     )
             elif s.kind == "curfew_violation":
                 role = s.details.get("role", "resident")
@@ -316,7 +336,7 @@ class FusionEngine:
             if diff_s <= self.fusion_window_s:
                 # Same zone or adjacent zone, or building access corroboration
                 is_zone_match = (inc.zone_id in candidate_zones) or (signal.zone_id == inc.zone_id)
-                is_access_attach = (signal.modality == "access" or "access" in inc.modalities or inc.zone_id in candidate_zones or signal.zone_id in candidate_zones)
+                is_access_attach = (signal.modality == "access" or "access" in inc.modalities)
                 if is_zone_match or is_access_attach:
                     open_incident = inc
                     break

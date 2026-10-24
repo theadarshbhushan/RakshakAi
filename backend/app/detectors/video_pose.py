@@ -496,7 +496,7 @@ class VideoPoseDetector(BaseDetector):
             "polygon": [[0.25, 0.25], [0.85, 0.25], [0.85, 0.85], [0.25, 0.85]],
             "door_line": {"p1": [0.2, 0.5], "p2": [0.8, 0.5]},
             "threshold_intrusion": 0.50,
-            "threshold_fight": 0.60,
+            "threshold_fight": 0.65,
             "loiter_seconds": 45,
             "curfew_start": "23:00",
             "curfew_end": "05:30",
@@ -526,7 +526,7 @@ class VideoPoseDetector(BaseDetector):
                 if rules_doc.zones and zone_id in rules_doc.zones:
                     z_thresh = rules_doc.zones[zone_id].get("thresholds", {})
                     config["threshold_intrusion"] = z_thresh.get("zone_intrusion", 0.50)
-                    config["threshold_fight"] = z_thresh.get("fight", 0.60)
+                    config["threshold_fight"] = z_thresh.get("fight", 0.65)
                 config["loiter_seconds"] = rules_doc.rules.get("loitering", {}).get("seconds", 45)
         except Exception as e:
             logger.debug(f"Config load using default fallbacks: {e}")
@@ -621,6 +621,7 @@ class VideoPoseDetector(BaseDetector):
         wrist_speeds: Dict[int, List[float]] = {}
         prev_wrist_pos: Dict[int, Tuple[float, float]] = {}
         active_signals: Dict[int, Tuple[str, datetime]] = {}
+        last_fight_emit: Dict[str, datetime] = {}
         door_in_count = 0
         door_swipes_count = 1
 
@@ -1008,7 +1009,7 @@ class VideoPoseDetector(BaseDetector):
                                 norm_speed = (disp / frame_interval_s) / box_h
                                 speeds = wrist_speeds.setdefault(tid, [])
                                 speeds.append(norm_speed)
-                                if len(speeds) > 8:
+                                if len(speeds) > 12:
                                     speeds.pop(0)
                             prev_wrist_pos[tid] = (float(w_pt[0]), float(w_pt[1]))
 
@@ -1030,51 +1031,61 @@ class VideoPoseDetector(BaseDetector):
                             # Check wrist speeds
                             sp_a = wrist_speeds.get(pa["track_id"], [])
                             sp_b = wrist_speeds.get(pb["track_id"], [])
-                            if len(sp_a) >= 4 or len(sp_b) >= 4:
-                                mean_a = float(np.mean(sp_a)) if sp_a else 0.0
-                                mean_b = float(np.mean(sp_b)) if sp_b else 0.0
+                            if len(sp_a) >= 12 or len(sp_b) >= 12:
+                                rec_a = sp_a[-8:]
+                                rec_b = sp_b[-8:]
+                                mean_a = float(np.mean(rec_a)) if rec_a else 0.0
+                                mean_b = float(np.mean(rec_b)) if rec_b else 0.0
                                 max_sp = max(mean_a, mean_b)
                                 mean_sp = (mean_a + mean_b) / 2.0
                                 if max_sp > 1.2 or mean_sp > 0.8:  # threshold speed
                                     f_score = round(min(1.0, max(max_sp / 2.5, mean_sp / 2.0)), 3)
-                                    event_tag = f"FIGHT {f_score:.2f}"
-                                    for p_obj in (pa, pb):
-                                        p_tid = p_obj["track_id"]
-                                        active_signals[p_tid] = (event_tag, current_sim_time + timedelta(seconds=5.0))
-                                        p_obj["state"] = "red"
-                                        p_obj["event_name"] = event_tag
+                                    threshold_fight = cam_config.get("threshold_fight", 0.65)
+                                    if f_score >= threshold_fight:
+                                        event_tag = f"FIGHT {f_score:.2f}"
+                                        for p_obj in (pa, pb):
+                                            p_tid = p_obj["track_id"]
+                                            active_signals[p_tid] = (event_tag, current_sim_time + timedelta(seconds=5.0))
+                                            p_obj["state"] = "red"
+                                            p_obj["event_name"] = event_tag
 
-                                    evidence_id = f"fight_{camera_id}_{pa['track_id']}_{pb['track_id']}_{int(current_sim_time.timestamp())}"
-                                    ev_rel_path = self._save_evidence(
-                                        frame=frame,
-                                        persons_data=persons_data,
-                                        poly_px=poly_px,
-                                        prefix=evidence_id,
-                                        is_occupied=any(p.get("in_zone", False) for p in persons_data),
-                                        door_line=door_line_pts,
-                                        door_info={"in": door_in_count, "swipes": door_swipes_count},
-                                        camera_name=camera_id,
-                                        sim_time=current_sim_time,
-                                    )
+                                        cooldown_elapsed = (
+                                            camera_id not in last_fight_emit or
+                                            (current_sim_time - last_fight_emit[camera_id]).total_seconds() > 5.0
+                                        )
+                                        if cooldown_elapsed:
+                                            last_fight_emit[camera_id] = current_sim_time
+                                            evidence_id = f"fight_{camera_id}_{pa['track_id']}_{pb['track_id']}_{int(current_sim_time.timestamp())}"
+                                            ev_rel_path = self._save_evidence(
+                                                frame=frame,
+                                                persons_data=persons_data,
+                                                poly_px=poly_px,
+                                                prefix=evidence_id,
+                                                is_occupied=any(p.get("in_zone", False) for p in persons_data),
+                                                door_line=door_line_pts,
+                                                door_info={"in": door_in_count, "swipes": door_swipes_count},
+                                                camera_name=camera_id,
+                                                sim_time=current_sim_time,
+                                            )
 
-                                    fight_sig = Signal(
-                                        org_id="",
-                                        ts=current_sim_time,
-                                        modality="video",
-                                        kind="fight",
-                                        zone_id=zone_id,
-                                        camera_id=camera_id,
-                                        score=f_score,
-                                        threshold=cam_config.get("threshold_fight", 0.60),
-                                        details={
-                                            "track_ids": [pa["track_id"], pb["track_id"]],
-                                            "wrist_speed_norm": round(mean_sp, 2),
-                                            "experimental": True,
-                                        },
-                                        evidence_path=ev_rel_path,
-                                        source="video_pose",
-                                    )
-                                    await emit_callback(fight_sig)
+                                            fight_sig = Signal(
+                                                org_id="",
+                                                ts=current_sim_time,
+                                                modality="video",
+                                                kind="fight",
+                                                zone_id=zone_id,
+                                                camera_id=camera_id,
+                                                score=f_score,
+                                                threshold=threshold_fight,
+                                                details={
+                                                    "track_ids": [pa["track_id"], pb["track_id"]],
+                                                    "wrist_speed_norm": round(mean_sp, 2),
+                                                    "experimental": True,
+                                                },
+                                                evidence_path=ev_rel_path,
+                                                source="video_pose",
+                                            )
+                                            await emit_callback(fight_sig)
 
             # -------------------------------------------------------------
             # 3. Update Live MJPEG Stream Memory Buffer & Annotated MP4 Pipe
