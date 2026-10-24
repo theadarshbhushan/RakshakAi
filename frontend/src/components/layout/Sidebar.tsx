@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
   ]
 
   return (
-    <aside className="w-[240px] shrink-0 bg-sidebar border-r border-border-card flex flex-col justify-between h-screen sticky top-0">
+    <aside className="w-[240px] shrink-0 bg-sidebar border-r border-border-card flex flex-col h-screen sticky top-0 overflow-y-auto">
       <div className="flex flex-col">
         {/* Brand & Org */}
         <div className="p-5 border-b border-border-divider">
@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
         </div>
 
         {/* Navigation links */}
-        <nav className="p-3 space-y-1">
+        <nav className="p-3 space-y-1 pb-6">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -90,23 +90,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
             </NavLink>
           ))}
         </nav>
-      </div>
-
-      {/* Footer: On duty tonight */}
-      <div className="p-4 m-3 rounded-card bg-fill-subtle border border-border-card/60">
-        <p className="text-[11px] font-semibold text-content-muted uppercase tracking-wider">
-          On duty tonight
-        </p>
-        <div className="mt-2 space-y-1 text-[12px] text-content-body">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Ramesh K.</span>
-            <span className="text-content-muted text-[11px]">Terrace</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Suresh M.</span>
-            <span className="text-content-muted text-[11px]">Gate & Entry</span>
-          </div>
-        </div>
       </div>
     </aside>
   )

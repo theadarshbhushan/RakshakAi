@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { api, getAccessToken, setAccessToken } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import { useSoundStore } from '@/store/soundStore'
+import { cleanExplanation, getIncidentPlainTitle } from '@/utils/incidentHelpers'
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected'
 
@@ -84,7 +85,11 @@ export function useWebSocket() {
 
               const severity = (data?.severity || 'high').toLowerCase()
               playAlertChime(severity)
-              const title = data?.title_human || data?.explanation_paragraph || 'New safety incident reported'
+              const title =
+                cleanExplanation(data?.title_human) ||
+                getIncidentPlainTitle(data) ||
+                cleanExplanation(data?.explanation_paragraph) ||
+                'New safety incident reported'
               const zone = data?.zone_id ? data.zone_id.replace(/_/g, ' ') : 'Zone'
 
               toast.error(`${severity === 'critical' ? 'Critical' : 'Alert'} · ${zone}`, {

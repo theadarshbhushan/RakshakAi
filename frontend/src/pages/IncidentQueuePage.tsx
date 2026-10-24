@@ -20,6 +20,7 @@ import { SeverityDot } from '@/components/ui/SeverityDot'
 import { Countdown } from '@/components/ui/Countdown'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Incident } from '@/api/types'
+import { cleanExplanation } from '@/utils/incidentHelpers'
 
 export const IncidentQueuePage: React.FC = () => {
   const navigate = useNavigate()
@@ -278,7 +279,7 @@ export const IncidentQueuePage: React.FC = () => {
                       {/* Plain Language Explanation */}
                       <td className="py-3.5 px-4 text-content-body max-w-sm">
                         <p className="line-clamp-2 leading-relaxed">
-                          {(inc as any).title_human || inc.explanation || 'Corroborated safety incident'}
+                          {cleanExplanation((inc as any).title_human || inc.explanation) || 'Corroborated safety incident'}
                         </p>
                       </td>
 

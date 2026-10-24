@@ -54,10 +54,6 @@ export const Countdown: React.FC<CountdownProps> = ({
   }
 
   return (
-    <span className={`font-mono text-critical ${className}`}>
-      {prefix}
-      {formatTime(remaining)}
-      {suffix}
-    </span>
+    <span className={`font-mono text-critical ${className}`}>{prefix}{formatTime(remaining)}{suffix}</span>
   )
 }

@@ -26,6 +26,7 @@ import { Countdown } from '@/components/ui/Countdown'
 import { CameraTile } from '@/components/evidence/CameraTile'
 import { toast } from 'sonner'
 import type { Incident, Signal, Camera } from '@/api/types'
+import { getLocalGreeting, getIncidentPlainTitle } from '@/utils/incidentHelpers'
 
 export const LiveMonitorPage: React.FC = () => {
   const { user } = useAuthStore()
@@ -154,7 +155,7 @@ export const LiveMonitorPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-[26px] font-bold text-content-primary">
-            Good evening, {firstName}
+            {getLocalGreeting()}, {firstName}
           </h1>
           <p className="text-[14px] text-content-secondary mt-1">
             Curfew started at 11:00 pm. {urgentIncident ? 'One incident needs a decision.' : 'All zones currently quiet.'}
@@ -180,16 +181,13 @@ export const LiveMonitorPage: React.FC = () => {
               </span>
             </div>
             <h2 className="text-[18px] font-semibold text-content-primary leading-snug">
-              {(urgentIncident as any).title_human ||
-                urgentIncident.explanation ||
-                'Someone is on the terrace after curfew, and a scream was heard'}
+              {getIncidentPlainTitle(urgentIncident)}
             </h2>
             <div className="flex flex-wrap items-center gap-3 text-[13px] text-content-secondary pt-0.5">
               <span>Camera, microphone and door log all agree</span>
               <span className="text-border-divider">·</span>
               <span className="text-critical font-medium">
-                Warden is alerted in{' '}
-                <Countdown secondsLeft={(urgentIncident as any).sla_countdown_seconds || 42} />
+                Warden is alerted in <Countdown secondsLeft={(urgentIncident as any).sla_countdown_seconds || 42} />
               </span>
             </div>
           </div>
@@ -236,8 +234,8 @@ export const LiveMonitorPage: React.FC = () => {
           },
           {
             label: 'Ignored as harmless noise',
-            value: 'Laughter & cheering',
-            meta: <span>Suppressed by acoustic context ratio</span>,
+            value: String((summary as any)?.suppressed_audio_count || (summary as any)?.suppressed_signals || 12),
+            meta: <span>Laughter, cheering, music</span>,
           },
           {
             label: 'Average response',

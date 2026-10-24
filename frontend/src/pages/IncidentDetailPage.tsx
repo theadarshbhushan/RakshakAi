@@ -28,6 +28,7 @@ import {
   Cell,
 } from 'recharts'
 import { api } from '@/api/client'
+import { cleanExplanation, getIncidentPlainTitle } from '@/utils/incidentHelpers'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -264,9 +265,8 @@ export const IncidentDetailPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-[24px] sm:text-[26px] font-bold text-content-primary leading-tight">
-              {(incident as any).title_human ||
-                incident.explanation ||
-                'Someone is on the terrace after curfew, and a scream was heard'}
+              {cleanExplanation((incident as any).title_human) ||
+                getIncidentPlainTitle(incident)}
             </h1>
             <p className="text-[13px] text-content-secondary flex flex-wrap items-center gap-2">
               <SeverityDot severity={incident.severity} pulse={!isAcknowledged} />
@@ -279,8 +279,7 @@ export const IncidentDetailPage: React.FC = () => {
               <span className="text-border-divider">·</span>
               {!isAcknowledged ? (
                 <span className="text-critical font-medium">
-                  not yet acknowledged · warden alerted in{' '}
-                  <Countdown secondsLeft={(incident as any).sla_countdown_seconds || 42} />
+                  not yet acknowledged · warden alerted in <Countdown secondsLeft={(incident as any).sla_countdown_seconds || 42} />
                 </span>
               ) : (
                 <span className="text-status-healthy font-medium">
@@ -517,7 +516,7 @@ export const IncidentDetailPage: React.FC = () => {
           <Card padding="md" className="space-y-3">
             <h2 className="text-[17px] font-semibold text-content-primary">What happened</h2>
             <p className="text-[14px] text-content-body leading-relaxed">
-              {incident.explanation ||
+              {cleanExplanation(incident.explanation) ||
                 'Person stepped into the terrace area. No staff swipe explains it. A scream was heard at 23:38, corroborated by elevated audio distress levels.'}
             </p>
             <div className="p-3 bg-primary-tint/60 rounded-card border border-primary/20 text-[13px] text-primary flex items-start gap-2.5 leading-relaxed">
