@@ -46,13 +46,18 @@ async def stop_scenario(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/reset", dependencies=[Depends(require_permission("scenarios:run"))])
-async def reset_scenario(current_user: User = Depends(get_current_user)):
+async def reset_scenario(
+    include_history: bool = Query(False, description="Also remove historical demo incidents"),
+    current_user: User = Depends(get_current_user),
+):
     """
     Reset organization signals, incidents, and access events.
     PRESERVES the tamper-evident audit log for compliance.
+    Preserves historical demo incidents unless include_history=true.
     """
     result = await ScenarioRunner.reset_scenario(
         org_id=current_user.org_id,
         actor_email=current_user.email,
+        include_history=include_history,
     )
     return result

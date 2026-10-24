@@ -32,6 +32,7 @@ class Incident(Document):
     reviewer: Optional[str] = None
     review_note: Optional[str] = None
     reviewed_ts: Optional[datetime] = None
+    source: str = Field(default="live", description="live | scenario | seed_history")
 
     class Settings:
         name = "incidents"

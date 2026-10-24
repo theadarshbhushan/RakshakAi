@@ -270,15 +270,21 @@ class ScenarioRunner:
             del _active_clocks[org_id]
 
     @staticmethod
-    async def reset_scenario(org_id: str, actor_email: str = "system") -> Dict[str, Any]:
+    async def reset_scenario(org_id: str, actor_email: str = "system", include_history: bool = False) -> Dict[str, Any]:
         """
         Clears this organization's signals, incidents, feedback, access events, and threshold history.
         PRESERVES the audit log for compliance.
+        If include_history is False, preserves documents with source="seed_history".
         """
         ScenarioRunner.stop_scenario(org_id)
 
-        deleted_signals = await Signal.find(Signal.org_id == org_id).delete()
-        deleted_incidents = await Incident.find(Incident.org_id == org_id).delete()
+        if include_history:
+            deleted_signals = await Signal.find(Signal.org_id == org_id).delete()
+            deleted_incidents = await Incident.find(Incident.org_id == org_id).delete()
+        else:
+            deleted_signals = await Signal.find(Signal.org_id == org_id, Signal.source != "seed_history").delete()
+            deleted_incidents = await Incident.find(Incident.org_id == org_id, Incident.source != "seed_history").delete()
+
         deleted_feedback = await Feedback.find(Feedback.org_id == org_id).delete()
         deleted_access = await AccessEvent.find(AccessEvent.org_id == org_id).delete()
         deleted_history = await ThresholdHistory.find(ThresholdHistory.org_id == org_id).delete()

@@ -5,6 +5,7 @@ Scope reduced for stabilization: invitations, api_keys, ingest, and usage disabl
 """
 from fastapi import APIRouter
 
+from app.api.v1.routers.analytics import router as analytics_router
 from app.api.v1.routers.analyze import router as analyze_router
 from app.api.v1.routers.audit import router as audit_router
 from app.api.v1.routers.auth import router as auth_router
@@ -51,3 +52,4 @@ api_v1_router.include_router(eval_router)
 api_v1_router.include_router(stream_router)
 api_v1_router.include_router(analyze_router)
 api_v1_router.include_router(sos_router)
+api_v1_router.include_router(analytics_router)
