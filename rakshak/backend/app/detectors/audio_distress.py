@@ -176,15 +176,28 @@ class AudioDistressDetector(BaseDetector):
         # Resolve media source path
         src_path = Path(source)
         if not src_path.is_absolute():
-            src_path = settings.DATA_DIR / source
+            source_str = str(source).replace("\\", "/")
+            if (settings.DATA_DIR / source).exists():
+                src_path = settings.DATA_DIR / source
+            elif (settings.PROJECT_ROOT / source).exists():
+                src_path = settings.PROJECT_ROOT / source
+            elif source_str.startswith("data/") and (settings.PROJECT_ROOT / source).exists():
+                src_path = settings.PROJECT_ROOT / source
+            elif source_str.startswith("data/") and (settings.DATA_DIR / source_str[len("data/"):]).exists():
+                src_path = settings.DATA_DIR / source_str[len("data/"):]
+            elif Path(source).exists():
+                src_path = Path(source).resolve()
+            else:
+                src_path = settings.DATA_DIR / source
+
         if not src_path.exists():
             from app.detectors.synthetic_media import ensure_media_fixtures
             ensure_media_fixtures()
             if not src_path.exists():
                 # Fallback to standard fixtures by zone or kind
-                if "hard_negative" in source or "common" in zone_id:
+                if "hard_negative" in str(source) or "common" in zone_id:
                     src_path = settings.DATA_DIR / "audio" / "hard_negative" / "cheering_01.wav"
-                elif "normal" in source:
+                elif "normal" in str(source):
                     src_path = settings.DATA_DIR / "audio" / "normal" / "normal_01.wav"
                 else:
                     src_path = settings.DATA_DIR / "audio" / "distress" / "distress_01.wav"

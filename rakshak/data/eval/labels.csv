@@ -1,15 +1,55 @@
 file,modality,task,expected_label,is_hard_negative,source,voice
-audio/distress/distress_01.wav,audio,distress_audio,1,0,synthetic,female
-audio/hard_negative/cheering_01.wav,audio,distress_audio,0,1,synthetic,mixed
-audio/normal/normal_01.wav,audio,distress_audio,0,0,synthetic,na
-audio/distress/distress_f2.wav,audio,distress_audio,1,0,synthetic,female
-audio/distress/distress_m1.wav,audio,distress_audio,1,0,synthetic,male
-audio/hard_negative/laughter_01.wav,audio,distress_audio,0,1,synthetic,female
-audio/hard_negative/laughter_02.wav,audio,distress_audio,0,1,synthetic,male
-audio/normal/ambient_01.wav,audio,distress_audio,0,0,synthetic,na
+raw_datasets/ESC-50-master/audio/1-20133-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-84536-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-84704-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-84705-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-85168-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-85184-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-88807-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-977-A-39.wav,audio,audio_distress,1,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-187207-A-20.wav,audio,audio_distress,1,0,esc50,female
+raw_datasets/ESC-50-master/audio/1-211527-A-20.wav,audio,audio_distress,1,0,esc50,female
+raw_datasets/ESC-50-master/audio/1-211527-B-20.wav,audio,audio_distress,1,0,esc50,female
+raw_datasets/ESC-50-master/audio/1-211527-C-20.wav,audio,audio_distress,1,0,esc50,female
+raw_datasets/ESC-50-master/audio/1-22694-A-20.wav,audio,audio_distress,1,0,esc50,male
+raw_datasets/ESC-50-master/audio/1-22694-B-20.wav,audio,audio_distress,1,0,esc50,male
+raw_datasets/ESC-50-master/audio/1-60997-A-20.wav,audio,audio_distress,1,0,esc50,mixed
+raw_datasets/ESC-50-master/audio/1-1791-A-26.wav,audio,audio_distress,0,1,esc50,female
+raw_datasets/ESC-50-master/audio/1-30039-A-26.wav,audio,audio_distress,0,1,esc50,female
+raw_datasets/ESC-50-master/audio/1-30043-A-26.wav,audio,audio_distress,0,1,esc50,male
+raw_datasets/ESC-50-master/audio/1-33658-A-26.wav,audio,audio_distress,0,1,esc50,male
+raw_datasets/ESC-50-master/audio/1-36164-A-26.wav,audio,audio_distress,0,1,esc50,mixed
+raw_datasets/ESC-50-master/audio/1-104089-A-22.wav,audio,audio_distress,0,1,esc50,na
+raw_datasets/ESC-50-master/audio/1-104089-B-22.wav,audio,audio_distress,0,1,esc50,na
+raw_datasets/ESC-50-master/audio/1-105224-A-22.wav,audio,audio_distress,0,1,esc50,na
+raw_datasets/ESC-50-master/audio/1-110537-A-22.wav,audio,audio_distress,0,1,esc50,na
+raw_datasets/ESC-50-master/audio/1-115920-A-22.wav,audio,audio_distress,0,1,esc50,na
+raw_datasets/ESC-50-master/audio/1-155858-A-25.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-155858-B-25.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-155858-C-25.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-155858-D-25.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-101336-A-30.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-103995-A-30.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-103999-A-30.wav,audio,audio_distress,0,0,esc50,na
+raw_datasets/ESC-50-master/audio/1-19111-A-24.wav,audio,audio_distress,0,0,esc50,female
+raw_datasets/ESC-50-master/audio/1-19118-A-24.wav,audio,audio_distress,0,0,esc50,male
+raw_datasets/ESC-50-master/audio/1-30830-A-24.wav,audio,audio_distress,0,0,esc50,female
+raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4,video,fight,1,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/Violence/V_2.mp4,video,fight,1,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/Violence/V_3.mp4,video,fight,1,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/Violence/V_4.mp4,video,fight,1,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/Violence/V_5.mp4,video,fight,1,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/NonViolence/NV_1.mp4,video,fight,0,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/NonViolence/NV_2.mp4,video,fight,0,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/NonViolence/NV_3.mp4,video,fight,0,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/NonViolence/NV_4.mp4,video,fight,0,0,rlvs,na
+raw_datasets/Real Life Violence Dataset/NonViolence/NV_5.mp4,video,fight,0,0,rlvs,na
 videos/intrusion/intrusion_01.mp4,video,zone_intrusion,1,0,synthetic,na
 videos/normal/normal_01.mp4,video,zone_intrusion,0,0,synthetic,na
 videos/tailgating/tailgate_01.mp4,video,tailgating,1,0,synthetic,na
 videos/normal/normal_01.mp4,video,tailgating,0,0,synthetic,na
 videos/intrusion/intrusion_01.mp4,video,loitering,1,0,synthetic,na
 videos/normal/normal_01.mp4,video,loitering,0,1,synthetic,na
+audio/distress/distress_01.wav,audio,distress_audio,1,0,synthetic,female
+audio/hard_negative/cheering_01.wav,audio,distress_audio,0,1,synthetic,mixed
+audio/normal/normal_01.wav,audio,distress_audio,0,0,synthetic,na

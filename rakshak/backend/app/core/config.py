@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     SHOW_BOXES: bool = Field(default=True, description="Draw tracked person bounding boxes on visualisations")
 
     # Filesystem Paths
+    PROJECT_ROOT: Path = PROJECT_ROOT
     RULES_DEFAULT_PATH: Path = BACKEND_DIR / "rules.default.yaml"
     DATA_DIR: Path = PROJECT_ROOT / "data"
     EVIDENCE_DIR: Path = PROJECT_ROOT / "data" / "evidence"

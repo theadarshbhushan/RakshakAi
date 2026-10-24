@@ -480,8 +480,19 @@ class VideoPoseDetector(BaseDetector):
 
     async def _load_camera_zone_config(self, camera_id: str, zone_id: str) -> Dict[str, Any]:
         """Load camera and zone configuration from Mongo if available, with resilient defaults."""
+        # Intelligent fallback for zone_type if not found in db
+        zid_lower = zone_id.lower()
+        if "common" in zid_lower or "lounge" in zid_lower or "room" in zid_lower or "hall" in zid_lower:
+            default_zone_type = "common"
+        elif "corridor" in zid_lower or "passage" in zid_lower:
+            default_zone_type = "corridor"
+        elif "entry" in zid_lower or "gate" in zid_lower or "door" in zid_lower:
+            default_zone_type = "entry"
+        else:
+            default_zone_type = "restricted"
+
         config: Dict[str, Any] = {
-            "zone_type": "restricted",
+            "zone_type": default_zone_type,
             "polygon": [[0.25, 0.25], [0.85, 0.25], [0.85, 0.85], [0.25, 0.85]],
             "door_line": {"p1": [0.2, 0.5], "p2": [0.8, 0.5]},
             "threshold_intrusion": 0.50,
@@ -551,15 +562,27 @@ class VideoPoseDetector(BaseDetector):
             else:
                 src_path = Path(source)
                 if not src_path.is_absolute():
-                    src_path = settings.DATA_DIR / source
+                    source_str = str(source).replace("\\", "/")
+                    if (settings.DATA_DIR / source).exists():
+                        src_path = settings.DATA_DIR / source
+                    elif (settings.PROJECT_ROOT / source).exists():
+                        src_path = settings.PROJECT_ROOT / source
+                    elif source_str.startswith("data/") and (settings.PROJECT_ROOT / source).exists():
+                        src_path = settings.PROJECT_ROOT / source
+                    elif source_str.startswith("data/") and (settings.DATA_DIR / source_str[len("data/"):]).exists():
+                        src_path = settings.DATA_DIR / source_str[len("data/"):]
+                    elif Path(source).exists():
+                        src_path = Path(source).resolve()
+                    else:
+                        src_path = settings.DATA_DIR / source
                 if not src_path.exists():
                     from app.detectors.synthetic_media import ensure_media_fixtures
                     ensure_media_fixtures()
                     if not src_path.exists():
                         # Fallback to standard fixtures by zone
-                        if "tailgate" in source or "block_b" in zone_id:
+                        if "tailgate" in str(source) or "block_b" in zone_id:
                             src_path = settings.DATA_DIR / "videos" / "tailgating" / "tailgate_01.mp4"
-                        elif "normal" in source or "common" in zone_id:
+                        elif "normal" in str(source) or "common" in zone_id:
                             src_path = settings.DATA_DIR / "videos" / "normal" / "normal_01.mp4"
                         else:
                             src_path = settings.DATA_DIR / "videos" / "intrusion" / "intrusion_01.mp4"
@@ -1002,14 +1025,17 @@ class VideoPoseDetector(BaseDetector):
                         mean_w = (wa + wb) / 2.0
                         dist = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
 
-                        if dist < 1.2 * mean_w:
+                        if dist < 1.5 * mean_w:
                             # Check wrist speeds
                             sp_a = wrist_speeds.get(pa["track_id"], [])
                             sp_b = wrist_speeds.get(pb["track_id"], [])
-                            if len(sp_a) >= 6 and len(sp_b) >= 6:
-                                mean_sp = (np.mean(sp_a) + np.mean(sp_b)) / 2.0
-                                if mean_sp > 1.8:  # threshold speed
-                                    f_score = round(min(1.0, mean_sp / 3.0), 3)
+                            if len(sp_a) >= 4 or len(sp_b) >= 4:
+                                mean_a = float(np.mean(sp_a)) if sp_a else 0.0
+                                mean_b = float(np.mean(sp_b)) if sp_b else 0.0
+                                max_sp = max(mean_a, mean_b)
+                                mean_sp = (mean_a + mean_b) / 2.0
+                                if max_sp > 1.2 or mean_sp > 0.8:  # threshold speed
+                                    f_score = round(min(1.0, max(max_sp / 2.5, mean_sp / 2.0)), 3)
                                     event_tag = f"FIGHT {f_score:.2f}"
                                     for p_obj in (pa, pb):
                                         p_tid = p_obj["track_id"]

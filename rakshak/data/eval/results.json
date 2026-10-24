@@ -1,64 +1,96 @@
 {
-  "timestamp": "2026-10-24T17:18:38.180705+00:00",
+  "timestamp": "2026-10-24T18:28:41.018163+00:00",
   "tasks": {
     "audio_distress": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 35,
+        "positives": 15,
+        "negatives": 20
+      },
       "metrics": {
-        "tp": 3,
-        "fp": 1,
-        "tn": 4,
-        "fn": 0,
-        "precision": 0.75,
-        "recall": 1.0,
-        "f1": 0.8571,
-        "fpr": 0.2,
-        "total": 8
+        "status": "evaluated",
+        "tp": 10,
+        "fp": 0,
+        "tn": 20,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "fpr": 0.0,
+        "sample_counts": {
+          "total": 35,
+          "positives": 15,
+          "negatives": 20
+        }
       },
       "hard_negatives": {
+        "status": "evaluated",
         "tp": 0,
-        "fp": 1,
-        "tn": 2,
+        "fp": 0,
+        "tn": 10,
         "fn": 0,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "fpr": 0.3333,
-        "total": 3
+        "fpr": 0.0,
+        "sample_counts": {
+          "total": 10,
+          "positives": 0,
+          "negatives": 10
+        }
       },
       "fairness_by_voice": {
+        "na": {
+          "status": "evaluated",
+          "tp": 5,
+          "fp": 0,
+          "tn": 12,
+          "fn": 3,
+          "precision": 1.0,
+          "recall": 0.625,
+          "f1": 0.7692,
+          "fpr": 0.0,
+          "sample_counts": {
+            "total": 20,
+            "positives": 8,
+            "negatives": 12
+          }
+        },
         "female": {
+          "status": "evaluated",
           "tp": 2,
           "fp": 0,
-          "tn": 1,
+          "tn": 4,
+          "fn": 2,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6667,
+          "fpr": 0.0,
+          "sample_counts": {
+            "total": 8,
+            "positives": 4,
+            "negatives": 4
+          }
+        },
+        "male": {
+          "status": "evaluated",
+          "tp": 2,
+          "fp": 0,
+          "tn": 3,
           "fn": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0,
           "fpr": 0.0,
-          "total": 3
+          "sample_counts": {
+            "total": 5,
+            "positives": 2,
+            "negatives": 3
+          }
         },
         "mixed": {
-          "tp": 0,
-          "fp": 1,
-          "tn": 0,
-          "fn": 0,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "fpr": 1.0,
-          "total": 1
-        },
-        "na": {
-          "tp": 0,
-          "fp": 0,
-          "tn": 2,
-          "fn": 0,
-          "precision": 1.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "fpr": 0.0,
-          "total": 2
-        },
-        "male": {
+          "status": "evaluated",
           "tp": 1,
           "fp": 0,
           "tn": 1,
@@ -67,87 +99,446 @@
           "recall": 1.0,
           "f1": 1.0,
           "fpr": 0.0,
-          "total": 2
+          "sample_counts": {
+            "total": 2,
+            "positives": 1,
+            "negatives": 1
+          }
         }
       },
-      "latency_per_sec_media": 0.1114,
+      "latency_per_sec_media": 0.0467,
       "samples": [
         {
-          "file": "audio/distress/distress_01.wav",
-          "task": "distress_audio",
-          "score": 0.887,
-          "predicted": 1,
-          "expected": 1,
-          "is_hard_negative": false,
-          "voice": "female"
-        },
-        {
-          "file": "audio/hard_negative/cheering_01.wav",
-          "task": "distress_audio",
-          "score": 0.638,
-          "predicted": 1,
-          "expected": 0,
-          "is_hard_negative": true,
-          "voice": "mixed"
-        },
-        {
-          "file": "audio/normal/normal_01.wav",
-          "task": "distress_audio",
-          "score": 0.0,
-          "predicted": 0,
-          "expected": 0,
-          "is_hard_negative": false,
-          "voice": "na"
-        },
-        {
-          "file": "audio/distress/distress_f2.wav",
-          "task": "distress_audio",
-          "score": 0.887,
-          "predicted": 1,
-          "expected": 1,
-          "is_hard_negative": false,
-          "voice": "female"
-        },
-        {
-          "file": "audio/distress/distress_m1.wav",
-          "task": "distress_audio",
+          "file": "raw_datasets/ESC-50-master/audio/1-20133-A-39.wav",
+          "filename": "1-20133-A-39.wav",
+          "task": "audio_distress",
           "score": 0.5,
           "predicted": 1,
           "expected": 1,
+          "result": "TP",
           "is_hard_negative": false,
-          "voice": "male"
+          "source": "esc50",
+          "voice": "na"
         },
         {
-          "file": "audio/hard_negative/laughter_01.wav",
-          "task": "distress_audio",
+          "file": "raw_datasets/ESC-50-master/audio/1-84536-A-39.wav",
+          "filename": "1-84536-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.858,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-84704-A-39.wav",
+          "filename": "1-84704-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.841,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-84705-A-39.wav",
+          "filename": "1-84705-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.44,
+          "predicted": 0,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-85168-A-39.wav",
+          "filename": "1-85168-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.968,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-85184-A-39.wav",
+          "filename": "1-85184-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.91,
+          "predicted": 0,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-88807-A-39.wav",
+          "filename": "1-88807-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.819,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-977-A-39.wav",
+          "filename": "1-977-A-39.wav",
+          "task": "audio_distress",
+          "score": 0.853,
+          "predicted": 0,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-187207-A-20.wav",
+          "filename": "1-187207-A-20.wav",
+          "task": "audio_distress",
           "score": 0.0,
           "predicted": 0,
-          "expected": 0,
-          "is_hard_negative": true,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "esc50",
           "voice": "female"
         },
         {
-          "file": "audio/hard_negative/laughter_02.wav",
-          "task": "distress_audio",
-          "score": 0.0,
+          "file": "raw_datasets/ESC-50-master/audio/1-211527-A-20.wav",
+          "filename": "1-211527-A-20.wav",
+          "task": "audio_distress",
+          "score": 0.887,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-211527-B-20.wav",
+          "filename": "1-211527-B-20.wav",
+          "task": "audio_distress",
+          "score": 0.521,
           "predicted": 0,
-          "expected": 0,
-          "is_hard_negative": true,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-211527-C-20.wav",
+          "filename": "1-211527-C-20.wav",
+          "task": "audio_distress",
+          "score": 0.933,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-22694-A-20.wav",
+          "filename": "1-22694-A-20.wav",
+          "task": "audio_distress",
+          "score": 0.937,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
           "voice": "male"
         },
         {
-          "file": "audio/normal/ambient_01.wav",
-          "task": "distress_audio",
+          "file": "raw_datasets/ESC-50-master/audio/1-22694-B-20.wav",
+          "filename": "1-22694-B-20.wav",
+          "task": "audio_distress",
+          "score": 0.99,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "male"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-60997-A-20.wav",
+          "filename": "1-60997-A-20.wav",
+          "task": "audio_distress",
+          "score": 1.0,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "mixed"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-1791-A-26.wav",
+          "filename": "1-1791-A-26.wav",
+          "task": "audio_distress",
           "score": 0.0,
           "predicted": 0,
           "expected": 0,
-          "is_hard_negative": false,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-30039-A-26.wav",
+          "filename": "1-30039-A-26.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-30043-A-26.wav",
+          "filename": "1-30043-A-26.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "male"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-33658-A-26.wav",
+          "filename": "1-33658-A-26.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "male"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-36164-A-26.wav",
+          "filename": "1-36164-A-26.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "mixed"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-104089-A-22.wav",
+          "filename": "1-104089-A-22.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
           "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-104089-B-22.wav",
+          "filename": "1-104089-B-22.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-105224-A-22.wav",
+          "filename": "1-105224-A-22.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-110537-A-22.wav",
+          "filename": "1-110537-A-22.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-115920-A-22.wav",
+          "filename": "1-115920-A-22.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-155858-A-25.wav",
+          "filename": "1-155858-A-25.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-155858-B-25.wav",
+          "filename": "1-155858-B-25.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-155858-C-25.wav",
+          "filename": "1-155858-C-25.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-155858-D-25.wav",
+          "filename": "1-155858-D-25.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-101336-A-30.wav",
+          "filename": "1-101336-A-30.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-103995-A-30.wav",
+          "filename": "1-103995-A-30.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-103999-A-30.wav",
+          "filename": "1-103999-A-30.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "na"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-19111-A-24.wav",
+          "filename": "1-19111-A-24.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "female"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-19118-A-24.wav",
+          "filename": "1-19118-A-24.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "male"
+        },
+        {
+          "file": "raw_datasets/ESC-50-master/audio/1-30830-A-24.wav",
+          "filename": "1-30830-A-24.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "esc50",
+          "voice": "female"
         }
       ]
     },
     "access_rules": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 40,
+        "positives": 16,
+        "negatives": 24
+      },
       "metrics": {
+        "status": "evaluated",
         "tp": 16,
         "fp": 0,
         "tn": 24,
@@ -156,87 +547,383 @@
         "recall": 1.0,
         "f1": 1.0,
         "fpr": 0.0,
-        "total": 40
+        "sample_counts": {
+          "total": 40,
+          "positives": 16,
+          "negatives": 24
+        }
       },
       "hard_negatives": {
+        "status": "evaluated",
         "tp": 0,
         "fp": 0,
         "tn": 4,
         "fn": 0,
-        "precision": 1.0,
+        "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
         "fpr": 0.0,
-        "total": 4
-      },
-      "total_swipes_evaluated": 40
-    },
-    "loitering": {
-      "metrics": {
-        "tp": 1,
-        "fp": 1,
-        "tn": 0,
-        "fn": 0,
-        "precision": 0.5,
-        "recall": 1.0,
-        "f1": 0.6667,
-        "fpr": 1.0,
-        "total": 2
-      },
-      "latency_per_sec_media": 0.6159,
-      "samples": [
-        {
-          "file": "videos/intrusion/intrusion_01.mp4",
-          "task": "loitering",
-          "score": 0.88,
-          "predicted": 1,
-          "expected": 1,
-          "is_hard_negative": false
-        },
-        {
-          "file": "videos/normal/normal_01.mp4",
-          "task": "loitering",
-          "score": 0.88,
-          "predicted": 1,
-          "expected": 0,
-          "is_hard_negative": true
+        "sample_counts": {
+          "total": 4,
+          "positives": 0,
+          "negatives": 4
         }
-      ]
-    },
-    "tailgating": {
-      "metrics": {
-        "tp": 1,
-        "fp": 0,
-        "tn": 1,
-        "fn": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "fpr": 0.0,
-        "total": 2
       },
-      "latency_per_sec_media": 0.4531,
+      "latency_per_sec_media": 0.0001
+    },
+    "fight": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 10,
+        "positives": 5,
+        "negatives": 5
+      },
+      "metrics": {
+        "status": "evaluated",
+        "tp": 4,
+        "fp": 4,
+        "tn": 1,
+        "fn": 1,
+        "precision": 0.5,
+        "recall": 0.8,
+        "f1": 0.6154,
+        "fpr": 0.8,
+        "sample_counts": {
+          "total": 10,
+          "positives": 5,
+          "negatives": 5
+        }
+      },
+      "latency_per_sec_media": 1.5255,
       "samples": [
         {
-          "file": "videos/tailgating/tailgate_01.mp4",
-          "task": "tailgating",
-          "score": 0.96,
+          "file": "raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4",
+          "filename": "V_1.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.798,
           "predicted": 1,
           "expected": 1,
-          "is_hard_negative": false
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "rlvs"
         },
         {
-          "file": "videos/normal/normal_01.mp4",
-          "task": "tailgating",
+          "file": "raw_datasets/Real Life Violence Dataset/Violence/V_2.mp4",
+          "filename": "V_2.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.684,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/Violence/V_3.mp4",
+          "filename": "V_3.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 1,
+          "result": "FN",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/Violence/V_4.mp4",
+          "filename": "V_4.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 1.0,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/Violence/V_5.mp4",
+          "filename": "V_5.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.488,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_1.mp4",
+          "filename": "NV_1.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
           "score": 0.0,
           "predicted": 0,
           "expected": 0,
-          "is_hard_negative": false
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_2.mp4",
+          "filename": "NV_2.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.859,
+          "predicted": 1,
+          "expected": 0,
+          "result": "FP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_3.mp4",
+          "filename": "NV_3.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.659,
+          "predicted": 1,
+          "expected": 0,
+          "result": "FP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_4.mp4",
+          "filename": "NV_4.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 1.0,
+          "predicted": 1,
+          "expected": 0,
+          "result": "FP",
+          "is_hard_negative": false,
+          "source": "rlvs"
+        },
+        {
+          "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_5.mp4",
+          "filename": "NV_5.mp4",
+          "task": "fight",
+          "zone_id": "terrace",
+          "score": 0.79,
+          "predicted": 1,
+          "expected": 0,
+          "result": "FP",
+          "is_hard_negative": false,
+          "source": "rlvs"
         }
       ]
     },
     "zone_intrusion": {
+      "status": "insufficient_data",
+      "sample_counts": {
+        "total": 0,
+        "positives": 0,
+        "negatives": 0
+      },
       "metrics": {
+        "status": "insufficient_data",
+        "sample_counts": {
+          "total": 0,
+          "positives": 0,
+          "negatives": 0
+        },
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "fpr": null
+      },
+      "latency_per_sec_media": "N/A",
+      "note": "Curated benchmark data pending (fewer than 5 real samples). Marked insufficient data as per evaluation protocol."
+    },
+    "tailgating": {
+      "status": "insufficient_data",
+      "sample_counts": {
+        "total": 0,
+        "positives": 0,
+        "negatives": 0
+      },
+      "metrics": {
+        "status": "insufficient_data",
+        "sample_counts": {
+          "total": 0,
+          "positives": 0,
+          "negatives": 0
+        },
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "fpr": null
+      },
+      "latency_per_sec_media": "N/A",
+      "note": "Curated benchmark data pending (fewer than 5 real samples). Marked insufficient data as per evaluation protocol."
+    },
+    "loitering": {
+      "status": "insufficient_data",
+      "sample_counts": {
+        "total": 0,
+        "positives": 0,
+        "negatives": 0
+      },
+      "metrics": {
+        "status": "insufficient_data",
+        "sample_counts": {
+          "total": 0,
+          "positives": 0,
+          "negatives": 0
+        },
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "fpr": null
+      },
+      "latency_per_sec_media": "N/A",
+      "note": "Curated benchmark data pending (fewer than 5 real samples). Marked insufficient data as per evaluation protocol."
+    }
+  },
+  "pipeline_smoke_test": {
+    "audio_distress_smoke": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 3,
+        "positives": 1,
+        "negatives": 2
+      },
+      "metrics": {
+        "status": "evaluated",
+        "tp": 1,
+        "fp": 1,
+        "tn": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667,
+        "fpr": 0.5,
+        "sample_counts": {
+          "total": 3,
+          "positives": 1,
+          "negatives": 2
+        }
+      },
+      "hard_negatives": {
+        "status": "evaluated",
+        "tp": 0,
+        "fp": 1,
+        "tn": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 1.0,
+        "sample_counts": {
+          "total": 1,
+          "positives": 0,
+          "negatives": 1
+        }
+      },
+      "fairness_by_voice": {
+        "female": {
+          "status": "evaluated",
+          "tp": 1,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "fpr": 0.0,
+          "sample_counts": {
+            "total": 1,
+            "positives": 1,
+            "negatives": 0
+          }
+        },
+        "mixed": {
+          "status": "evaluated",
+          "tp": 0,
+          "fp": 1,
+          "tn": 0,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "fpr": 1.0,
+          "sample_counts": {
+            "total": 1,
+            "positives": 0,
+            "negatives": 1
+          }
+        },
+        "na": {
+          "status": "evaluated",
+          "tp": 0,
+          "fp": 0,
+          "tn": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "fpr": 0.0,
+          "sample_counts": {
+            "total": 1,
+            "positives": 0,
+            "negatives": 1
+          }
+        }
+      },
+      "latency_per_sec_media": 0.0176,
+      "samples": [
+        {
+          "file": "audio/distress/distress_01.wav",
+          "filename": "distress_01.wav",
+          "task": "audio_distress",
+          "score": 0.887,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "synthetic",
+          "voice": "female"
+        },
+        {
+          "file": "audio/hard_negative/cheering_01.wav",
+          "filename": "cheering_01.wav",
+          "task": "audio_distress",
+          "score": 0.581,
+          "predicted": 1,
+          "expected": 0,
+          "result": "FP",
+          "is_hard_negative": true,
+          "source": "synthetic",
+          "voice": "mixed"
+        },
+        {
+          "file": "audio/normal/normal_01.wav",
+          "filename": "normal_01.wav",
+          "task": "audio_distress",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "synthetic",
+          "voice": "na"
+        }
+      ]
+    },
+    "loitering": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 2,
+        "positives": 1,
+        "negatives": 1
+      },
+      "metrics": {
+        "status": "evaluated",
         "tp": 1,
         "fp": 0,
         "tn": 1,
@@ -245,242 +932,841 @@
         "recall": 1.0,
         "f1": 1.0,
         "fpr": 0.0,
-        "total": 2
+        "sample_counts": {
+          "total": 2,
+          "positives": 1,
+          "negatives": 1
+        }
       },
-      "latency_per_sec_media": 0.4414,
+      "latency_per_sec_media": 0.6094,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
-          "task": "zone_intrusion",
-          "score": 0.76,
+          "filename": "intrusion_01.mp4",
+          "task": "loitering",
+          "zone_id": "corridor_1",
+          "score": 0.88,
           "predicted": 1,
           "expected": 1,
-          "is_hard_negative": false
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "synthetic"
         },
         {
           "file": "videos/normal/normal_01.mp4",
-          "task": "zone_intrusion",
+          "filename": "normal_01.mp4",
+          "task": "loitering",
+          "zone_id": "common_room",
           "score": 0.0,
           "predicted": 0,
           "expected": 0,
-          "is_hard_negative": false
+          "result": "TN",
+          "is_hard_negative": true,
+          "source": "synthetic"
+        }
+      ]
+    },
+    "tailgating": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 2,
+        "positives": 1,
+        "negatives": 1
+      },
+      "metrics": {
+        "status": "evaluated",
+        "tp": 1,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "sample_counts": {
+          "total": 2,
+          "positives": 1,
+          "negatives": 1
+        }
+      },
+      "latency_per_sec_media": 0.6327,
+      "samples": [
+        {
+          "file": "videos/tailgating/tailgate_01.mp4",
+          "filename": "tailgate_01.mp4",
+          "task": "tailgating",
+          "zone_id": "block_b_entry",
+          "score": 0.96,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "synthetic"
+        },
+        {
+          "file": "videos/normal/normal_01.mp4",
+          "filename": "normal_01.mp4",
+          "task": "tailgating",
+          "zone_id": "block_b_entry",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "synthetic"
+        }
+      ]
+    },
+    "zone_intrusion": {
+      "status": "evaluated",
+      "sample_counts": {
+        "total": 2,
+        "positives": 1,
+        "negatives": 1
+      },
+      "metrics": {
+        "status": "evaluated",
+        "tp": 1,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "sample_counts": {
+          "total": 2,
+          "positives": 1,
+          "negatives": 1
+        }
+      },
+      "latency_per_sec_media": 0.6303,
+      "samples": [
+        {
+          "file": "videos/intrusion/intrusion_01.mp4",
+          "filename": "intrusion_01.mp4",
+          "task": "zone_intrusion",
+          "zone_id": "terrace",
+          "score": 0.76,
+          "predicted": 1,
+          "expected": 1,
+          "result": "TP",
+          "is_hard_negative": false,
+          "source": "synthetic"
+        },
+        {
+          "file": "videos/normal/normal_01.mp4",
+          "filename": "normal_01.mp4",
+          "task": "zone_intrusion",
+          "zone_id": "common_room",
+          "score": 0.0,
+          "predicted": 0,
+          "expected": 0,
+          "result": "TN",
+          "is_hard_negative": false,
+          "source": "synthetic"
         }
       ]
     }
   },
   "fusion_comparison": {
     "audio_only": {
-      "tp": 1,
-      "fp": 2,
+      "status": "evaluated",
+      "tp": 2,
+      "fp": 3,
       "tn": 4,
       "fn": 1,
-      "precision": 0.3333,
-      "recall": 0.5,
-      "f1": 0.4,
-      "fpr": 0.3333,
-      "total": 8
+      "precision": 0.4,
+      "recall": 0.6667,
+      "f1": 0.5,
+      "fpr": 0.4286,
+      "sample_counts": {
+        "total": 10,
+        "positives": 3,
+        "negatives": 7
+      }
     },
     "video_only": {
-      "tp": 2,
+      "status": "evaluated",
+      "tp": 3,
       "fp": 2,
-      "tn": 4,
+      "tn": 5,
       "fn": 0,
-      "precision": 0.5,
+      "precision": 0.6,
       "recall": 1.0,
-      "f1": 0.6667,
-      "fpr": 0.3333,
-      "total": 8
+      "f1": 0.75,
+      "fpr": 0.2857,
+      "sample_counts": {
+        "total": 10,
+        "positives": 3,
+        "negatives": 7
+      }
     },
     "fused": {
-      "tp": 2,
+      "status": "evaluated",
+      "tp": 3,
       "fp": 0,
-      "tn": 6,
+      "tn": 7,
       "fn": 0,
       "precision": 1.0,
       "recall": 1.0,
       "f1": 1.0,
       "fpr": 0.0,
-      "total": 8
+      "sample_counts": {
+        "total": 10,
+        "positives": 3,
+        "negatives": 7
+      }
     },
     "bundles": [
       {
-        "id": "S1",
-        "is_emergency": 1,
+        "desc": "Clear Distress Incident",
         "audio_alert": 1,
         "video_alert": 1,
-        "access_alert": 1
+        "access_alert": 0,
+        "ground_truth": 1
       },
       {
-        "id": "S2",
-        "is_emergency": 1,
+        "desc": "Violent Intrusion Incident",
+        "audio_alert": 1,
+        "video_alert": 1,
+        "access_alert": 1,
+        "ground_truth": 1
+      },
+      {
+        "desc": "Curfew Escalation Incident",
         "audio_alert": 0,
         "video_alert": 1,
-        "access_alert": 1
+        "access_alert": 1,
+        "ground_truth": 1
       },
       {
-        "id": "S3",
-        "is_emergency": 0,
+        "desc": "Crowd Cheering / Screen Viewing (HN)",
         "audio_alert": 1,
         "video_alert": 0,
-        "access_alert": 0
+        "access_alert": 0,
+        "ground_truth": 0
       },
       {
-        "id": "S4",
-        "is_emergency": 0,
-        "audio_alert": 0,
-        "video_alert": 0,
-        "access_alert": 0
-      },
-      {
-        "id": "B1",
-        "is_emergency": 0,
+        "desc": "Laughter in Corridor (HN)",
         "audio_alert": 1,
         "video_alert": 0,
-        "access_alert": 0
+        "access_alert": 0,
+        "ground_truth": 0
       },
       {
-        "id": "B2",
-        "is_emergency": 0,
+        "desc": "Authorised Night Maintenance (HN)",
         "audio_alert": 0,
         "video_alert": 1,
-        "access_alert": 0
+        "access_alert": 0,
+        "ground_truth": 0
       },
       {
-        "id": "B3",
-        "is_emergency": 0,
-        "audio_alert": 0,
-        "video_alert": 1,
-        "access_alert": 0
-      },
-      {
-        "id": "B4",
-        "is_emergency": 0,
+        "desc": "Quiet Normal Common Room",
         "audio_alert": 0,
         "video_alert": 0,
-        "access_alert": 0
+        "access_alert": 0,
+        "ground_truth": 0
+      },
+      {
+        "desc": "Daytime Campus Walking",
+        "audio_alert": 0,
+        "video_alert": 0,
+        "access_alert": 0,
+        "ground_truth": 0
+      },
+      {
+        "desc": "Authorised Warden Patrol (HN)",
+        "audio_alert": 0,
+        "video_alert": 1,
+        "access_alert": 0,
+        "ground_truth": 0
+      },
+      {
+        "desc": "Door Slam / Noise Spike (HN)",
+        "audio_alert": 1,
+        "video_alert": 0,
+        "access_alert": 0,
+        "ground_truth": 0
       }
     ]
   },
   "per_sample_scores": [
     {
-      "file": "audio/distress/distress_01.wav",
-      "task": "distress_audio",
-      "score": 0.887,
-      "predicted": 1,
-      "expected": 1,
-      "is_hard_negative": false,
-      "voice": "female"
-    },
-    {
-      "file": "audio/hard_negative/cheering_01.wav",
-      "task": "distress_audio",
-      "score": 0.638,
-      "predicted": 1,
-      "expected": 0,
-      "is_hard_negative": true,
-      "voice": "mixed"
-    },
-    {
-      "file": "audio/normal/normal_01.wav",
-      "task": "distress_audio",
-      "score": 0.0,
-      "predicted": 0,
-      "expected": 0,
-      "is_hard_negative": false,
-      "voice": "na"
-    },
-    {
-      "file": "audio/distress/distress_f2.wav",
-      "task": "distress_audio",
-      "score": 0.887,
-      "predicted": 1,
-      "expected": 1,
-      "is_hard_negative": false,
-      "voice": "female"
-    },
-    {
-      "file": "audio/distress/distress_m1.wav",
-      "task": "distress_audio",
+      "file": "raw_datasets/ESC-50-master/audio/1-20133-A-39.wav",
+      "filename": "1-20133-A-39.wav",
+      "task": "audio_distress",
       "score": 0.5,
       "predicted": 1,
       "expected": 1,
+      "result": "TP",
       "is_hard_negative": false,
-      "voice": "male"
-    },
-    {
-      "file": "audio/hard_negative/laughter_01.wav",
-      "task": "distress_audio",
-      "score": 0.0,
-      "predicted": 0,
-      "expected": 0,
-      "is_hard_negative": true,
-      "voice": "female"
-    },
-    {
-      "file": "audio/hard_negative/laughter_02.wav",
-      "task": "distress_audio",
-      "score": 0.0,
-      "predicted": 0,
-      "expected": 0,
-      "is_hard_negative": true,
-      "voice": "male"
-    },
-    {
-      "file": "audio/normal/ambient_01.wav",
-      "task": "distress_audio",
-      "score": 0.0,
-      "predicted": 0,
-      "expected": 0,
-      "is_hard_negative": false,
+      "source": "esc50",
       "voice": "na"
     },
     {
-      "file": "videos/intrusion/intrusion_01.mp4",
-      "task": "loitering",
-      "score": 0.88,
+      "file": "raw_datasets/ESC-50-master/audio/1-84536-A-39.wav",
+      "filename": "1-84536-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.858,
       "predicted": 1,
       "expected": 1,
-      "is_hard_negative": false
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
     },
     {
-      "file": "videos/normal/normal_01.mp4",
-      "task": "loitering",
-      "score": 0.88,
-      "predicted": 1,
-      "expected": 0,
-      "is_hard_negative": true
-    },
-    {
-      "file": "videos/tailgating/tailgate_01.mp4",
-      "task": "tailgating",
-      "score": 0.96,
+      "file": "raw_datasets/ESC-50-master/audio/1-84704-A-39.wav",
+      "filename": "1-84704-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.841,
       "predicted": 1,
       "expected": 1,
-      "is_hard_negative": false
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
     },
     {
-      "file": "videos/normal/normal_01.mp4",
-      "task": "tailgating",
+      "file": "raw_datasets/ESC-50-master/audio/1-84705-A-39.wav",
+      "filename": "1-84705-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.44,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-85168-A-39.wav",
+      "filename": "1-85168-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.968,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-85184-A-39.wav",
+      "filename": "1-85184-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.91,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-88807-A-39.wav",
+      "filename": "1-88807-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.819,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-977-A-39.wav",
+      "filename": "1-977-A-39.wav",
+      "task": "audio_distress",
+      "score": 0.853,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-187207-A-20.wav",
+      "filename": "1-187207-A-20.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-211527-A-20.wav",
+      "filename": "1-211527-A-20.wav",
+      "task": "audio_distress",
+      "score": 0.887,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-211527-B-20.wav",
+      "filename": "1-211527-B-20.wav",
+      "task": "audio_distress",
+      "score": 0.521,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-211527-C-20.wav",
+      "filename": "1-211527-C-20.wav",
+      "task": "audio_distress",
+      "score": 0.933,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-22694-A-20.wav",
+      "filename": "1-22694-A-20.wav",
+      "task": "audio_distress",
+      "score": 0.937,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "male"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-22694-B-20.wav",
+      "filename": "1-22694-B-20.wav",
+      "task": "audio_distress",
+      "score": 0.99,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "male"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-60997-A-20.wav",
+      "filename": "1-60997-A-20.wav",
+      "task": "audio_distress",
+      "score": 1.0,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "mixed"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-1791-A-26.wav",
+      "filename": "1-1791-A-26.wav",
+      "task": "audio_distress",
       "score": 0.0,
       "predicted": 0,
       "expected": 0,
-      "is_hard_negative": false
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "female"
     },
     {
-      "file": "videos/intrusion/intrusion_01.mp4",
-      "task": "zone_intrusion",
-      "score": 0.76,
-      "predicted": 1,
-      "expected": 1,
-      "is_hard_negative": false
-    },
-    {
-      "file": "videos/normal/normal_01.mp4",
-      "task": "zone_intrusion",
+      "file": "raw_datasets/ESC-50-master/audio/1-30039-A-26.wav",
+      "filename": "1-30039-A-26.wav",
+      "task": "audio_distress",
       "score": 0.0,
       "predicted": 0,
       "expected": 0,
-      "is_hard_negative": false
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-30043-A-26.wav",
+      "filename": "1-30043-A-26.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "male"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-33658-A-26.wav",
+      "filename": "1-33658-A-26.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "male"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-36164-A-26.wav",
+      "filename": "1-36164-A-26.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "mixed"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-104089-A-22.wav",
+      "filename": "1-104089-A-22.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-104089-B-22.wav",
+      "filename": "1-104089-B-22.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-105224-A-22.wav",
+      "filename": "1-105224-A-22.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-110537-A-22.wav",
+      "filename": "1-110537-A-22.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-115920-A-22.wav",
+      "filename": "1-115920-A-22.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": true,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-155858-A-25.wav",
+      "filename": "1-155858-A-25.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-155858-B-25.wav",
+      "filename": "1-155858-B-25.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-155858-C-25.wav",
+      "filename": "1-155858-C-25.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-155858-D-25.wav",
+      "filename": "1-155858-D-25.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-101336-A-30.wav",
+      "filename": "1-101336-A-30.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-103995-A-30.wav",
+      "filename": "1-103995-A-30.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-103999-A-30.wav",
+      "filename": "1-103999-A-30.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "na"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-19111-A-24.wav",
+      "filename": "1-19111-A-24.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-19118-A-24.wav",
+      "filename": "1-19118-A-24.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "male"
+    },
+    {
+      "file": "raw_datasets/ESC-50-master/audio/1-30830-A-24.wav",
+      "filename": "1-30830-A-24.wav",
+      "task": "audio_distress",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "esc50",
+      "voice": "female"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4",
+      "filename": "V_1.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.798,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/Violence/V_2.mp4",
+      "filename": "V_2.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.684,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/Violence/V_3.mp4",
+      "filename": "V_3.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 1,
+      "result": "FN",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/Violence/V_4.mp4",
+      "filename": "V_4.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 1.0,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/Violence/V_5.mp4",
+      "filename": "V_5.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.488,
+      "predicted": 1,
+      "expected": 1,
+      "result": "TP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_1.mp4",
+      "filename": "NV_1.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.0,
+      "predicted": 0,
+      "expected": 0,
+      "result": "TN",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_2.mp4",
+      "filename": "NV_2.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.859,
+      "predicted": 1,
+      "expected": 0,
+      "result": "FP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_3.mp4",
+      "filename": "NV_3.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.659,
+      "predicted": 1,
+      "expected": 0,
+      "result": "FP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_4.mp4",
+      "filename": "NV_4.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 1.0,
+      "predicted": 1,
+      "expected": 0,
+      "result": "FP",
+      "is_hard_negative": false,
+      "source": "rlvs"
+    },
+    {
+      "file": "raw_datasets/Real Life Violence Dataset/NonViolence/NV_5.mp4",
+      "filename": "NV_5.mp4",
+      "task": "fight",
+      "zone_id": "terrace",
+      "score": 0.79,
+      "predicted": 1,
+      "expected": 0,
+      "result": "FP",
+      "is_hard_negative": false,
+      "source": "rlvs"
     }
-  ]
+  ],
+  "pose_quality": {
+    "timestamp": "2026-10-24T17:45:51.303657+00:00",
+    "dataset": {
+      "name": "Simuletic CCTV Aggressive Pose & Fight Detection (Sample)",
+      "license": "CC BY-NC-SA 4.0",
+      "type": "Synthetic CCTV",
+      "total_images": 103,
+      "total_instances": 207,
+      "keypoints": 17,
+      "format": "COCO keypoints [17, 3]"
+    },
+    "model": {
+      "weights": "yolov8n-pose.pt",
+      "architecture": "YOLOv8n-pose",
+      "parameters": 3289964,
+      "device": "cpu",
+      "imgsz": 640
+    },
+    "metrics": {
+      "box_precision": 0.9994,
+      "box_recall": 0.9952,
+      "box_map50": 0.995,
+      "box_map50_95": 0.9629,
+      "pose_precision": 0.9994,
+      "pose_recall": 0.9952,
+      "pose_map50": 0.995,
+      "pose_map50_95": 0.8035,
+      "fitness": 1.7664
+    },
+    "latency_ms": {
+      "preprocess": 0.88,
+      "inference": 63.26,
+      "postprocess": 1.11,
+      "total": 65.25
+    }
+  }
 }
