@@ -83,6 +83,26 @@ class RateLimitedError(AppError):
         )
 
 
+class BadRequestError(AppError):
+    def __init__(self, message: str, code: str = "BAD_REQUEST", details: Optional[Dict[str, Any]] = None) -> None:
+        super().__init__(
+            message=message,
+            code=code,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class PayloadTooLargeError(AppError):
+    def __init__(self, message: str, code: str = "PAYLOAD_TOO_LARGE", details: Optional[Dict[str, Any]] = None) -> None:
+        super().__init__(
+            message=message,
+            code=code,
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            details=details,
+        )
+
+
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "")
     return JSONResponse(

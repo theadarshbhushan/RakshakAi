@@ -39,6 +39,8 @@ yolov8n-pose.pt
 data/raw_datasets/
 data/videos/
 data/audio/
+data/uploads/*
+!data/uploads/.gitkeep
 data/evidence/public/*
 data/evidence/restricted/*
 !data/evidence/public/.gitkeep

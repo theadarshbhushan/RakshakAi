@@ -51,12 +51,15 @@ class Settings(BaseSettings):
     AUDIO_CLASSIFIER: str = Field(default="yamnet", description="yamnet | yamnet_head")
     HELP_KEYWORDS: bool = Field(default=False, description="Spot emergency keywords via speech model")
 
+    MAX_UPLOAD_SIZE_MB: int = Field(default=200, description="Max allowed file upload size in MB")
+
     # Filesystem Paths
     RULES_DEFAULT_PATH: Path = BACKEND_DIR / "rules.default.yaml"
     DATA_DIR: Path = PROJECT_ROOT / "data"
     EVIDENCE_DIR: Path = PROJECT_ROOT / "data" / "evidence"
     SCENARIOS_DIR: Path = PROJECT_ROOT / "data" / "scenarios"
     ACCESS_LOGS_DIR: Path = PROJECT_ROOT / "data" / "access_logs"
+    UPLOADS_DIR: Path = PROJECT_ROOT / "data" / "uploads"
     EVAL_DIR: Path = PROJECT_ROOT / "data" / "eval"
     ML_DIR: Path = PROJECT_ROOT / "ml"
     MODELS_DIR: Path = PROJECT_ROOT / "ml" / "models"

@@ -168,6 +168,7 @@ class AudioDistressDetector(BaseDetector):
         zone_id: str,
         sim_clock: SimulationClock,
         emit_callback: Callable[[Signal], Awaitable[None]],
+        progress_callback: Optional[Callable[[int], Awaitable[None]]] = None,
     ) -> None:
         self.running = True
         self.zone_id = zone_id
@@ -235,10 +236,17 @@ class AudioDistressDetector(BaseDetector):
         stage1_2_history: List[bool] = []
         last_unsuppressed_sim_time: Optional[datetime] = None
         last_suppressed_sim_time: Optional[datetime] = None
+        last_progress_pct = 0
 
         for w in range(num_windows):
             if not self.running or sim_clock.is_stopped:
                 break
+
+            if progress_callback and num_windows > 0:
+                current_pct = min(95, int((w / num_windows) * 90) + 5)
+                if current_pct - last_progress_pct >= 5:
+                    last_progress_pct = current_pct
+                    await progress_callback(current_pct)
 
             offset_s = w * window_hop_s
             target_sim_time = sim_clock.start_sim_time + timedelta(seconds=offset_s)
@@ -373,6 +381,9 @@ class AudioDistressDetector(BaseDetector):
                 f"score={signal.score} reason={suppress_reason} at {current_sim_time.strftime('%H:%M:%S')}"
             )
             await emit_callback(signal)
+
+        if progress_callback:
+            await progress_callback(95)
 
     def _save_audio_evidence(self, audio_chunk: np.ndarray, ev_id: str) -> str:
         """Saves a 3-second audio snippet to data/evidence/restricted/."""

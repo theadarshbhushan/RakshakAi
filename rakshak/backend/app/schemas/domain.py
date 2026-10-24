@@ -148,3 +148,30 @@ class UsageResponse(BaseModel):
     current_counts: Dict[str, int]
     incidents_this_month: int
     signals_this_month: int
+
+
+# Analysis Job Schemas
+class AnalysisJobResponse(BaseModel):
+    job_id: str
+    org_id: str
+    type: str
+    camera_id: Optional[str] = None
+    zone_id: Optional[str] = None
+    status: str
+    progress: int
+    signals_count: int
+    incident_ids: List[str] = Field(default_factory=list)
+    annotated_video_path: Optional[str] = None
+    original_filename: Optional[str] = None
+    error: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+
+
+class LiveAnalysisRequest(BaseModel):
+    camera_id: str
+    source: str = Field(default="webcam:0", description="webcam:0 or rtsp:// stream URL")
+    mic_enabled: bool = Field(default=False, description="Enable audio analysis from microphone")
+

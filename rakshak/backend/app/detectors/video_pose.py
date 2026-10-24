@@ -13,6 +13,8 @@ import asyncio
 import logging
 import math
 import os
+import shutil
+import subprocess
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -20,6 +22,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 import cv2
+import imageio_ffmpeg
 import numpy as np
 from ultralytics import YOLO
 
@@ -277,33 +280,48 @@ class VideoPoseDetector(BaseDetector):
 
     async def start(
         self,
-        source: str,
+        source: Any,
         zone_id: str,
         sim_clock: SimulationClock,
         emit_callback: Callable[[Signal], Awaitable[None]],
         loop: bool = True,
+        annotated_output_path: Optional[Path] = None,
+        progress_callback: Optional[Callable[[int], Awaitable[None]]] = None,
     ) -> None:
         self.running = True
-        camera_id = self.camera_id or source
+        camera_id = self.camera_id or str(source)
         self.zone_id = zone_id
 
-        # Resolve media source path
-        src_path = Path(source)
-        if not src_path.is_absolute():
-            src_path = settings.DATA_DIR / source
-        if not src_path.exists():
-            from app.detectors.synthetic_media import ensure_media_fixtures
-            ensure_media_fixtures()
-            if not src_path.exists():
-                # Fallback to standard fixtures by zone
-                if "tailgate" in source or "block_b" in zone_id:
-                    src_path = settings.DATA_DIR / "videos" / "tailgating" / "tailgate_01.mp4"
-                elif "normal" in source or "common" in zone_id:
-                    src_path = settings.DATA_DIR / "videos" / "normal" / "normal_01.mp4"
-                else:
-                    src_path = settings.DATA_DIR / "videos" / "intrusion" / "intrusion_01.mp4"
+        # Resolve media source path or stream
+        cap_arg: Any = source
+        if isinstance(source, int):
+            cap_arg = source
+        elif isinstance(source, str):
+            if source.isdigit():
+                cap_arg = int(source)
+            elif source.startswith("webcam:"):
+                parts = source.split(":")
+                cap_arg = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+            elif source.startswith("rtsp://") or source.startswith("http://") or source.startswith("https://"):
+                cap_arg = source
+            else:
+                src_path = Path(source)
+                if not src_path.is_absolute():
+                    src_path = settings.DATA_DIR / source
+                if not src_path.exists():
+                    from app.detectors.synthetic_media import ensure_media_fixtures
+                    ensure_media_fixtures()
+                    if not src_path.exists():
+                        # Fallback to standard fixtures by zone
+                        if "tailgate" in source or "block_b" in zone_id:
+                            src_path = settings.DATA_DIR / "videos" / "tailgating" / "tailgate_01.mp4"
+                        elif "normal" in source or "common" in zone_id:
+                            src_path = settings.DATA_DIR / "videos" / "normal" / "normal_01.mp4"
+                        else:
+                            src_path = settings.DATA_DIR / "videos" / "intrusion" / "intrusion_01.mp4"
+                cap_arg = str(src_path)
 
-        logger.info(f"Starting VideoPoseDetector on camera '{camera_id}' zone '{zone_id}' using source '{src_path}'")
+        logger.info(f"Starting VideoPoseDetector on camera '{camera_id}' zone '{zone_id}' using source '{cap_arg}'")
 
         # Load config
         cam_config = await self._load_camera_zone_config(camera_id, zone_id)
@@ -315,10 +333,15 @@ class VideoPoseDetector(BaseDetector):
         curfew_end = cam_config.get("curfew_end", "05:30")
 
         # Open video capture
-        cap = cv2.VideoCapture(str(src_path))
+        cap = cv2.VideoCapture(cap_arg)
         if not cap.isOpened():
-            logger.error(f"Failed to open video source: {src_path}")
-            return
+            logger.warning(f"Failed to open video source: {cap_arg}, trying fallback fixture...")
+            fallback_path = settings.DATA_DIR / "videos" / "normal" / "normal_01.mp4"
+            if fallback_path.exists():
+                cap = cv2.VideoCapture(str(fallback_path))
+            if not cap.isOpened():
+                logger.error(f"Failed to open video source: {cap_arg}")
+                return
 
         model = get_yolo_model()
 
@@ -336,6 +359,12 @@ class VideoPoseDetector(BaseDetector):
         baseline_hist: Optional[np.ndarray] = None
         view_change_start_ts: Optional[datetime] = None
         last_tamper_emit: Optional[datetime] = None
+
+        # Video recording & progress state
+        ffmpeg_proc: Optional[subprocess.Popen] = None
+        last_progress_pct = 0
+        latest_event_banner: Optional[str] = None
+        event_banner_expiry: Optional[datetime] = None
 
         frame_interval_s = 0.125  # ~8 FPS
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
@@ -549,6 +578,8 @@ class VideoPoseDetector(BaseDetector):
                                     source="video_pose",
                                 )
                                 await emit_callback(intrusion_sig)
+                                latest_event_banner = f"ZONE INTRUSION (ID {tid})"
+                                event_banner_expiry = current_sim_time + timedelta(seconds=4.0)
 
                     # (B) Line Crossing Check
                     curr_centroid = ((box[0] + box[2]) / 2.0, (box[1] + box[3]) / 2.0)
@@ -679,10 +710,77 @@ class VideoPoseDetector(BaseDetector):
                                     await emit_callback(fight_sig)
 
             # -------------------------------------------------------------
-            # 3. Update Live MJPEG Stream Memory Buffer
+            # 3. Update Live MJPEG Stream Memory Buffer & Annotated MP4 Pipe
             # -------------------------------------------------------------
             skeleton_img = render_skeleton_frame(frame.shape, persons_data, poly_px)
             blurred_img = render_face_blurred_frame(frame, persons_data)
+
+            # Annotated video recording if requested
+            if annotated_output_path:
+                if ffmpeg_proc is None:
+                    ffmpeg_bin = shutil.which("ffmpeg") or imageio_ffmpeg.get_ffmpeg_exe()
+                    annotated_output_path.parent.mkdir(parents=True, exist_ok=True)
+                    ffmpeg_proc = subprocess.Popen([
+                        ffmpeg_bin, "-y",
+                        "-f", "rawvideo",
+                        "-vcodec", "rawvideo",
+                        "-s", f"{frame_w}x{frame_h}",
+                        "-pix_fmt", "bgr24",
+                        "-r", "8",
+                        "-i", "-",
+                        "-c:v", "libx264",
+                        "-preset", "veryfast",
+                        "-pix_fmt", "yuv420p",
+                        str(annotated_output_path),
+                    ], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+                ann_frame = skeleton_img.copy()
+                cv2.putText(
+                    ann_frame,
+                    current_sim_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    (15, 28),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (200, 200, 200),
+                    1,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    ann_frame,
+                    f"Zone: {zone_id} | Cam: {camera_id}",
+                    (15, 52),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (140, 220, 140),
+                    1,
+                    cv2.LINE_AA,
+                )
+                if latest_event_banner and event_banner_expiry and current_sim_time <= event_banner_expiry:
+                    cv2.rectangle(ann_frame, (10, 66), (420, 96), (0, 0, 180), -1)
+                    cv2.putText(
+                        ann_frame,
+                        f"ALERT: {latest_event_banner}",
+                        (15, 88),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.55,
+                        (255, 255, 255),
+                        2,
+                        cv2.LINE_AA,
+                    )
+
+                if ffmpeg_proc and ffmpeg_proc.stdin:
+                    try:
+                        ffmpeg_proc.stdin.write(ann_frame.tobytes())
+                    except Exception as err:
+                        logger.warning(f"Error piping frame to ffmpeg: {err}")
+
+            # Report progress if callback supplied
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            if total_frames > 0 and progress_callback:
+                current_pct = min(95, int((frame_count / total_frames) * 90) + 5)
+                if current_pct - last_progress_pct >= 5:
+                    last_progress_pct = current_pct
+                    await progress_callback(current_pct)
 
             _, sk_jpg = cv2.imencode(".jpg", skeleton_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
             _, bl_jpg = cv2.imencode(".jpg", blurred_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
@@ -697,6 +795,16 @@ class VideoPoseDetector(BaseDetector):
             await sim_clock.sleep(frame_interval_s)
 
         cap.release()
+        if ffmpeg_proc and ffmpeg_proc.stdin:
+            try:
+                ffmpeg_proc.stdin.close()
+                ffmpeg_proc.wait(timeout=10)
+            except Exception as e:
+                logger.warning(f"Error finalizing ffmpeg process: {e}")
+
+        if progress_callback:
+            await progress_callback(95)
+
         logger.info(f"VideoPoseDetector finished for camera '{camera_id}'")
 
     def _save_evidence(

@@ -14,6 +14,7 @@ from app.models.user import (
     RefreshSession,
     User,
 )
+from app.models.analysis import AnalysisJob
 from app.models.zone import Camera, Zone
 
 ALL_DOCUMENT_MODELS = [
@@ -34,9 +35,11 @@ ALL_DOCUMENT_MODELS = [
     RuleDocument,
     BreakglassGrant,
     AuditLog,
+    AnalysisJob,
 ]
 
 __all__ = [
+    "AnalysisJob",
     "Organization",
     "Site",
     "User",
