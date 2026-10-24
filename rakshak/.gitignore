@@ -28,3 +28,20 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 .venv
+
+# ML weights and datasets
+*.pt
+*.joblib
+models/
+yolov8n-pose.pt
+data/raw_datasets/
+data/videos/
+data/audio/
+data/evidence/public/*
+data/evidence/restricted/*
+!data/evidence/public/.gitkeep
+!data/evidence/restricted/.gitkeep
+*.mp4
+*.avi
+*.wav
+*.mp3

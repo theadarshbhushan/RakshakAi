@@ -152,10 +152,12 @@ async def test_scenario_s1_critical_corroboration(client: AsyncClient):
 
     incidents_res = await client.get("/api/v1/incidents", headers={"Authorization": f"Bearer {token}"})
     assert incidents_res.status_code == 200
+    assert incidents_res.json()["total"] >= 1
     inc_items = incidents_res.json()["items"]
     assert len(inc_items) >= 1
     crit_inc = inc_items[0]
 
+    assert crit_inc["site_id"] is not None
     assert crit_inc["severity"] == "critical"
     assert len(set(crit_inc["modalities"])) == 3  # Video, Audio, Access
     assert crit_inc["composite_score"] >= 0.85

@@ -54,6 +54,9 @@ async def list_incidents(
         except Exception:
             pass
 
+    count_query = {k: v for k, v in query.items() if k != "_id"}
+    total_count = await Incident.find(count_query).count()
+
     incidents = await Incident.find(query).sort("-_id").limit(limit + 1).to_list()
     has_next = len(incidents) > limit
     items_to_return = incidents[:limit]
@@ -83,7 +86,7 @@ async def list_incidents(
         for inc in items_to_return
     ]
 
-    return PaginatedResponse(items=resp_items, next_cursor=next_cursor)
+    return PaginatedResponse(items=resp_items, next_cursor=next_cursor, total=total_count)
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse, dependencies=[Depends(require_permission("incidents:read"))])

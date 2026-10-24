@@ -71,6 +71,15 @@ class ScenarioRunner:
         - Mock audio detectors emit audio signals
         - Fusion engine fuses non-suppressed signals and builds incidents in real-time
         """
+        # Pre-warm AI models in real mode so initial loading latency doesn't consume sim clock
+        if settings.DETECTOR_MODE == "real":
+            from app.detectors.synthetic_media import ensure_media_fixtures
+            from app.detectors.video_pose import get_yolo_model
+            from app.detectors.audio_distress import get_yamnet_model
+            ensure_media_fixtures(settings.DATA_DIR)
+            get_yolo_model()
+            get_yamnet_model()
+
         # Parse simulation start time
         sim_start_str = scenario_data.get("sim_start", "23:38:00")
         sh, sm, ss = map(int, sim_start_str.split(":"))
@@ -135,32 +144,110 @@ class ScenarioRunner:
 
         # 2. Video detectors tasks
         video_tasks = []
-        for cam_data in scenario_data.get("cameras", []):
-            detector = MockVideoDetector(timeline=cam_data.get("timeline", []))
-            video_tasks.append(
-                detector.start(
-                    source=cam_data.get("camera_id", "cam"),
-                    zone_id=cam_data.get("zone_id", "common"),
-                    sim_clock=sim_clock,
-                    emit_callback=emit_signal,
-                )
-            )
-
         # 3. Audio detectors tasks
         audio_tasks = []
-        for audio_data in scenario_data.get("audio", []):
-            detector = MockAudioDetector(timeline=audio_data.get("timeline", []))
-            audio_tasks.append(
-                detector.start(
-                    source="mic",
-                    zone_id=audio_data.get("zone_id", "common"),
-                    sim_clock=sim_clock,
-                    emit_callback=emit_signal,
+
+        if settings.DETECTOR_MODE == "real":
+            from app.detectors.audio_distress import AudioDistressDetector
+            from app.detectors.synthetic_media import ensure_media_fixtures
+            from app.detectors.video_pose import VideoPoseDetector
+
+            ensure_media_fixtures(settings.DATA_DIR)
+            scenario_id = scenario_data.get("id", "")
+
+            # Video sources
+            cam_list = scenario_data.get("cameras", [])
+            if not cam_list:
+                # Default mapping based on scenario
+                if scenario_id == "scenario_1":
+                    cam_list = [{"camera_id": "cam_terrace", "zone_id": "terrace", "source": "videos/intrusion/intrusion_01.mp4"}]
+                elif scenario_id == "scenario_2":
+                    cam_list = [{"camera_id": "cam_block_b_entry", "zone_id": "block_b_entry", "source": "videos/tailgating/tailgate_01.mp4"}]
+                elif scenario_id == "scenario_4":
+                    cam_list = [{"camera_id": "cam_common_room", "zone_id": "common_room", "source": "videos/normal/normal_01.mp4"}]
+
+            for cam_data in cam_list:
+                cam_id = cam_data.get("camera_id", "cam")
+                z_id = cam_data.get("zone_id", "common")
+                src = cam_data.get("source")
+                if not src:
+                    if "terrace" in z_id or scenario_id == "scenario_1":
+                        src = "videos/intrusion/intrusion_01.mp4"
+                    elif "block_b" in z_id or scenario_id == "scenario_2":
+                        src = "videos/tailgating/tailgate_01.mp4"
+                    else:
+                        src = "videos/normal/normal_01.mp4"
+
+                v_detector = VideoPoseDetector(camera_id=cam_id, zone_id=z_id)
+                video_tasks.append(
+                    v_detector.start(
+                        source=src,
+                        zone_id=z_id,
+                        sim_clock=sim_clock,
+                        emit_callback=emit_signal,
+                    )
                 )
-            )
+
+            # Audio sources
+            audio_list = scenario_data.get("audio", [])
+            if not audio_list:
+                if scenario_id == "scenario_1":
+                    audio_list = [{"zone_id": "terrace", "source": "audio/distress/distress_01.wav"}]
+                elif scenario_id == "scenario_3":
+                    audio_list = [{"zone_id": "common_room", "source": "audio/hard_negative/cheering_01.wav"}]
+
+            for audio_data in audio_list:
+                z_id = audio_data.get("zone_id", "common")
+                src = audio_data.get("source")
+                if not src:
+                    if scenario_id == "scenario_3" or "common" in z_id:
+                        src = "audio/hard_negative/cheering_01.wav"
+                    else:
+                        # Find first distress file
+                        distress_dir = settings.DATA_DIR / "audio" / "distress"
+                        distress_files = list(distress_dir.glob("*.wav")) if distress_dir.exists() else []
+                        src = f"audio/distress/{distress_files[0].name}" if distress_files else "audio/distress/distress_01.wav"
+
+                a_detector = AudioDistressDetector(zone_id=z_id)
+                audio_tasks.append(
+                    a_detector.start(
+                        source=src,
+                        zone_id=z_id,
+                        sim_clock=sim_clock,
+                        emit_callback=emit_signal,
+                    )
+                )
+        else:
+            # Mock mode: Replay timeline events
+            for cam_data in scenario_data.get("cameras", []):
+                detector = MockVideoDetector(timeline=cam_data.get("timeline", []))
+                video_tasks.append(
+                    detector.start(
+                        source=cam_data.get("camera_id", "cam"),
+                        zone_id=cam_data.get("zone_id", "common"),
+                        sim_clock=sim_clock,
+                        emit_callback=emit_signal,
+                    )
+                )
+
+            for audio_data in scenario_data.get("audio", []):
+                detector = MockAudioDetector(timeline=audio_data.get("timeline", []))
+                audio_tasks.append(
+                    detector.start(
+                        source="mic",
+                        zone_id=audio_data.get("zone_id", "common"),
+                        sim_clock=sim_clock,
+                        emit_callback=emit_signal,
+                    )
+                )
+
+        async def scenario_timer():
+            duration_s = float(scenario_data.get("duration_s", 30))
+            await sim_clock.sleep(duration_s)
+            sim_clock.stop()
 
         # Run all generators concurrently
-        tasks = [replay_access_logs()] + video_tasks + audio_tasks
+        tasks = [replay_access_logs(), scenario_timer()] + video_tasks + audio_tasks
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for r in results:
             if isinstance(r, Exception):

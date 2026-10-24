@@ -18,6 +18,7 @@ from app.api.v1.routers.rules import router as rules_router
 from app.api.v1.routers.scenarios import router as scenarios_router
 from app.api.v1.routers.signals import router as signals_router
 from app.api.v1.routers.sites import router as sites_router
+from app.api.v1.routers.stream import router as stream_router
 from app.api.v1.routers.users import router as users_router
 from app.api.v1.routers.zones import router as zones_router
 
@@ -45,3 +46,4 @@ api_v1_router.include_router(calibration_router)
 api_v1_router.include_router(privacy_router)
 api_v1_router.include_router(audit_router)
 api_v1_router.include_router(eval_router)
+api_v1_router.include_router(stream_router)

@@ -71,6 +71,8 @@ class FusionEngine:
         if len(modalities) == 2:
             return "high"
         if len(modalities) <= 1:
+            if "camera_tamper" in kinds:
+                return "high" if composite_score >= 0.8 else "medium"
             return "medium" if composite_score >= 0.6 else "low"
         return "low"
 
@@ -130,6 +132,17 @@ class FusionEngine:
                 narrative_parts.append(
                     f"Access log: tailgating detected at {door} ({p_cnt} people crossed vs {s_cnt} swipe)."
                 )
+            elif s.kind == "loitering":
+                dur = s.details.get("duration_s", 45)
+                narrative_parts.append(
+                    f"Unusual activity: Person loitering in '{zone_name}' for {dur}s during curfew hours at {t_str} (score {s.score:.2f})."
+                )
+            elif s.kind == "camera_tamper":
+                tamper_type = s.details.get("tamper_type", "view obstructed or altered")
+                cam = s.camera_id or "camera"
+                narrative_parts.append(
+                    f"Camera tamper detected on {cam} at {t_str}: {tamper_type} (score {s.score:.2f})."
+                )
 
         # Query suppressed signals in the same zone around this window
         suppressed_signals = await Signal.find(
@@ -183,6 +196,11 @@ class FusionEngine:
 
         # Determine target zones (current zone + adjacent zones)
         zone_doc = await Zone.find_one({"org_id": self.org_id, "zone_id": signal.zone_id})
+        resolved_site_id = signal.site_id or (zone_doc.site_id if zone_doc else None)
+        if not signal.site_id and resolved_site_id:
+            signal.site_id = resolved_site_id
+            await signal.save()
+
         zone_name = zone_doc.name if zone_doc else signal.zone_id
         candidate_zones = [signal.zone_id]
         if zone_doc and zone_doc.adjacent_zone_ids:
@@ -204,7 +222,7 @@ class FusionEngine:
             if diff_s <= self.fusion_window_s:
                 # Same zone or adjacent zone, or building access corroboration
                 is_zone_match = (inc.zone_id in candidate_zones) or (signal.zone_id == inc.zone_id)
-                is_access_attach = (signal.modality == "access" or inc.zone_id in candidate_zones or signal.zone_id in candidate_zones)
+                is_access_attach = (signal.modality == "access" or "access" in inc.modalities or inc.zone_id in candidate_zones or signal.zone_id in candidate_zones)
                 if is_zone_match or is_access_attach:
                     open_incident = inc
                     break
@@ -212,6 +230,8 @@ class FusionEngine:
         if open_incident:
             is_new = False
             incident = open_incident
+            if not incident.site_id and resolved_site_id:
+                incident.site_id = resolved_site_id
             # Prefer restricted/primary zone for the incident zone display
             if zone_doc and zone_doc.type in ("restricted", "entry") and incident.zone_id != signal.zone_id:
                 incident.zone_id = signal.zone_id
@@ -225,7 +245,7 @@ class FusionEngine:
             is_new = True
             incident = Incident(
                 org_id=self.org_id,
-                site_id=signal.site_id,
+                site_id=resolved_site_id,
                 created_ts=signal.ts,
                 updated_ts=signal.ts,
                 zone_id=signal.zone_id,
