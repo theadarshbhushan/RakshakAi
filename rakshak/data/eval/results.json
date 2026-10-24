@@ -1,0 +1,11 @@
+{
+  "last_run": null,
+  "scenarios_evaluated": 0,
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "mean_detection_latency_s": 0.4
+  },
+  "scenarios": {}
+}

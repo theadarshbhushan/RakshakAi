@@ -1,0 +1,107 @@
+curfew:
+  start: "23:00"
+  end: "05:30"
+  applies_to_roles:
+    - resident
+
+zones:
+  terrace:
+    name: "Terrace Rooftop"
+    type: restricted
+    allowed_roles:
+      - warden
+      - maintenance
+    adjacent_zone_ids:
+      - corridor_2f
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  server_room:
+    name: "Server Infrastructure Room"
+    type: restricted
+    allowed_roles:
+      - admin
+    adjacent_zone_ids: []
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  block_b_entry:
+    name: "Block B Main Turnstile Entry"
+    type: entry
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+      - visitor
+    adjacent_zone_ids:
+      - common_room
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  common_room:
+    name: "Student Common Recreation Lounge"
+    type: common
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+    adjacent_zone_ids:
+      - block_b_entry
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  corridor_2f:
+    name: "2nd Floor Residential Corridor"
+    type: corridor
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+    adjacent_zone_ids:
+      - terrace
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+
+cameras:
+  - camera_id: "cam_terrace"
+    name: "Terrace North Camera"
+    zone_id: "terrace"
+    source_path: "mock_rtsp://cameras/terrace/feed.mp4"
+    door_line: null
+  - camera_id: "cam_block_b_entry"
+    name: "Block B Turnstile Gate"
+    zone_id: "block_b_entry"
+    source_path: "mock_rtsp://cameras/block_b_entry/feed.mp4"
+    door_line:
+      p1: [0.2, 0.5]
+      p2: [0.8, 0.5]
+  - camera_id: "cam_common_room"
+    name: "Common Room Overhead"
+    zone_id: "common_room"
+    source_path: "mock_rtsp://cameras/common_room/feed.mp4"
+    door_line: null
+  - camera_id: "cam_corridor_2f"
+    name: "Corridor 2F South"
+    zone_id: "corridor_2f"
+    source_path: "mock_rtsp://cameras/corridor_2f/feed.mp4"
+    door_line: null
+
+tailgating:
+  window_seconds: 5
+
+fusion:
+  window_seconds: 30
+
+weights:
+  video: 0.9
+  audio: 0.8
+  access: 0.7

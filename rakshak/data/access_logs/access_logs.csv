@@ -1,0 +1,14 @@
+ts,card_id,pseudo_id,role,door_id,zone_id,direction,result
+2026-10-24T18:15:00+00:00,CARD_RES_001,f06dd196,resident,door_block_b,block_b_entry,in,granted
+2026-10-24T18:30:00+00:00,CARD_RES_002,e8c86cf3,resident,door_common_room,common_room,in,granted
+2026-10-24T18:45:00+00:00,CARD_RES_003,3d6b0c6a,resident,door_block_b,block_b_entry,out,granted
+2026-10-24T19:00:00+00:00,CARD_WAR_001,47fd5d4a,warden,door_terrace,terrace,in,granted
+2026-10-24T19:15:00+00:00,CARD_RES_004,a3fedf85,resident,door_block_b,block_b_entry,in,granted
+2026-10-24T19:30:00+00:00,CARD_RES_005,6c172ab7,resident,door_common_room,common_room,out,granted
+2026-10-24T19:45:00+00:00,CARD_ADM_001,a715a20f,admin,door_server_room,server_room,in,granted
+2026-10-24T21:15:05+00:00,CARD_RES_010,7de0b9ca,resident,door_block_b,block_b_entry,in,granted
+2026-10-24T22:15:20+00:00,CARD_RES_011,33f64307,resident,door_terrace,terrace,in,denied
+2026-10-24T22:45:10+00:00,CARD_RES_012,baebb5cc,resident,door_server_room,server_room,in,denied
+2026-10-24T23:15:00+00:00,CARD_RES_020,07cdf55f,resident,door_block_b,block_b_entry,in,granted
+2026-10-24T23:38:05+00:00,CARD_RES_021,a91f02c3,resident,door_block_b,block_b_entry,in,granted
+2026-10-25T01:20:30+00:00,CARD_RES_022,03ce7da9,resident,door_block_b,block_b_entry,in,granted

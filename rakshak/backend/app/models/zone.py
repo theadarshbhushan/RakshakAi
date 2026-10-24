@@ -1,0 +1,53 @@
+"""
+Zone and Camera document models.
+All tenant-scoped with org_id.
+"""
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+from pydantic import Field
+from beanie import Document
+from pymongo import IndexModel, ASCENDING
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class Zone(Document):
+    org_id: str
+    site_id: str
+    zone_id: str = Field(..., description="Unique zone identifier within organization")
+    name: str
+    type: str = Field(..., description="common | corridor | entry | restricted")
+    polygons: Dict[str, Any] = Field(default_factory=dict, description="Normalised 0-1 points per camera")
+    allowed_roles: List[str] = Field(default_factory=list)
+    adjacent_zone_ids: List[str] = Field(default_factory=list)
+    map_coords: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=utc_now)
+
+    class Settings:
+        name = "zones"
+        indexes = [
+            IndexModel([("org_id", ASCENDING), ("zone_id", ASCENDING)], unique=True),
+            IndexModel([("org_id", ASCENDING), ("site_id", ASCENDING)]),
+        ]
+
+
+class Camera(Document):
+    org_id: str
+    site_id: str
+    camera_id: str = Field(..., description="Unique camera identifier within organization")
+    name: str
+    zone_id: str
+    source_path: str
+    door_line: Optional[Dict[str, Any]] = None  # e.g. {"p1": [0.2, 0.5], "p2": [0.8, 0.5]}
+    status: str = Field(default="online")
+    created_at: datetime = Field(default_factory=utc_now)
+
+    class Settings:
+        name = "cameras"
+        indexes = [
+            IndexModel([("org_id", ASCENDING), ("camera_id", ASCENDING)], unique=True),
+            IndexModel([("org_id", ASCENDING), ("zone_id", ASCENDING)]),
+            IndexModel([("org_id", ASCENDING), ("site_id", ASCENDING)]),
+        ]

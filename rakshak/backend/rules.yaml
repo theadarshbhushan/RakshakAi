@@ -1,0 +1,78 @@
+curfew:
+  start: "23:00"
+  end: "05:30"
+  applies_to_roles:
+    - resident
+
+zones:
+  terrace:
+    type: restricted
+    allowed_roles:
+      - warden
+      - maintenance
+    adjacent_zone_ids:
+      - corridor_2f
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  server_room:
+    type: restricted
+    allowed_roles:
+      - admin
+    adjacent_zone_ids: []
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  block_b_entry:
+    type: entry
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+      - visitor
+    adjacent_zone_ids:
+      - common_room
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  common_room:
+    type: common
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+    adjacent_zone_ids:
+      - block_b_entry
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+  corridor_2f:
+    type: corridor
+    allowed_roles:
+      - resident
+      - warden
+      - admin
+      - maintenance
+    adjacent_zone_ids:
+      - terrace
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.60
+
+tailgating:
+  window_seconds: 5
+
+fusion:
+  window_seconds: 30
+
+weights:
+  video: 0.9
+  audio: 0.8
+  access: 0.7

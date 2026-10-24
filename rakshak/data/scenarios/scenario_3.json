@@ -1,0 +1,38 @@
+{
+  "id": "scenario_3",
+  "name": "S3: Common-Room Birthday Cheering (Context Filter Audio Suppression)",
+  "sim_start": "20:30:00",
+  "duration_s": 20,
+  "access_log_slice": [
+    {
+      "sim_offset_s": 2,
+      "pseudo_id": "c19e3344",
+      "role": "resident",
+      "door_id": "door_common_room",
+      "zone_id": "common_room",
+      "direction": "in",
+      "result": "granted"
+    }
+  ],
+  "cameras": [],
+  "audio": [
+    {
+      "zone_id": "common_room",
+      "timeline": [
+        {
+          "sim_offset_s": 6,
+          "kind": "distress_audio",
+          "score": 0.72,
+          "threshold": 0.35,
+          "suppressed": true,
+          "suppress_reason": "Context filter: high ambient celebratory cheering detected in common_room (ratio > 0.8)",
+          "details": {
+            "label": "Celebratory Shouting",
+            "context_label": "birthday_party",
+            "context_ratio": 0.88
+          }
+        }
+      ]
+    }
+  ]
+}

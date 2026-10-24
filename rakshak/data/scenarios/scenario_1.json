@@ -1,0 +1,54 @@
+{
+  "id": "scenario_1",
+  "name": "S1: Terrace Intrusion, Scream, and Curfew Swipe (Critical Corroboration)",
+  "sim_start": "23:38:00",
+  "duration_s": 30,
+  "access_log_slice": [
+    {
+      "sim_offset_s": 5,
+      "pseudo_id": "a91f02c3",
+      "role": "resident",
+      "door_id": "door_block_b",
+      "zone_id": "block_b_entry",
+      "direction": "in",
+      "result": "granted"
+    }
+  ],
+  "cameras": [
+    {
+      "camera_id": "cam_terrace",
+      "zone_id": "terrace",
+      "timeline": [
+        {
+          "sim_offset_s": 10,
+          "kind": "zone_intrusion",
+          "score": 0.85,
+          "threshold": 0.50,
+          "details": {
+            "bounding_box": [0.4, 0.3, 0.6, 0.8],
+            "motion_detected": true
+          },
+          "evidence_path": "evidence/public/terrace_intrusion_snapshot.jpg"
+        }
+      ]
+    }
+  ],
+  "audio": [
+    {
+      "zone_id": "terrace",
+      "timeline": [
+        {
+          "sim_offset_s": 16,
+          "kind": "distress_audio",
+          "score": 0.80,
+          "threshold": 0.35,
+          "details": {
+            "label": "Screaming",
+            "decibels": 88
+          },
+          "evidence_path": "evidence/restricted/terrace_scream_01.wav"
+        }
+      ]
+    }
+  ]
+}

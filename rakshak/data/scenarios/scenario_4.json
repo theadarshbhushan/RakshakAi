@@ -1,0 +1,34 @@
+{
+  "id": "scenario_4",
+  "name": "S4: Normal Evening Activity (Zero False Positives / Baseline)",
+  "sim_start": "19:00:00",
+  "duration_s": 20,
+  "access_log_slice": [
+    {
+      "sim_offset_s": 3,
+      "pseudo_id": "d88a1122",
+      "role": "resident",
+      "door_id": "door_block_b",
+      "zone_id": "block_b_entry",
+      "direction": "in",
+      "result": "granted"
+    },
+    {
+      "sim_offset_s": 8,
+      "pseudo_id": "e99b2233",
+      "role": "resident",
+      "door_id": "door_common_room",
+      "zone_id": "common_room",
+      "direction": "in",
+      "result": "granted"
+    }
+  ],
+  "cameras": [
+    {
+      "camera_id": "cam_common_room",
+      "zone_id": "common_room",
+      "timeline": []
+    }
+  ],
+  "audio": []
+}

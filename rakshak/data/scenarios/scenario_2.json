@@ -1,0 +1,46 @@
+{
+  "id": "scenario_2",
+  "name": "S2: Tailgating at Block B Turnstile Entry (2 Crossings, 1 Swipe)",
+  "sim_start": "21:15:00",
+  "duration_s": 20,
+  "access_log_slice": [
+    {
+      "sim_offset_s": 5,
+      "pseudo_id": "b47c8910",
+      "role": "resident",
+      "door_id": "door_block_b",
+      "zone_id": "block_b_entry",
+      "direction": "in",
+      "result": "granted"
+    }
+  ],
+  "cameras": [
+    {
+      "camera_id": "cam_block_b_entry",
+      "zone_id": "block_b_entry",
+      "timeline": [
+        {
+          "sim_offset_s": 5,
+          "kind": "line_crossing",
+          "score": 0.95,
+          "threshold": 0.50,
+          "details": {
+            "direction": "in",
+            "door_id": "door_block_b"
+          }
+        },
+        {
+          "sim_offset_s": 7,
+          "kind": "line_crossing",
+          "score": 0.96,
+          "threshold": 0.50,
+          "details": {
+            "direction": "in",
+            "door_id": "door_block_b"
+          }
+        }
+      ]
+    }
+  ],
+  "audio": []
+}
