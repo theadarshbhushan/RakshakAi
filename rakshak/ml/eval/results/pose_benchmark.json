@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-24T17:45:51.303657+00:00",
+  "dataset": {
+    "name": "Simuletic CCTV Aggressive Pose & Fight Detection (Sample)",
+    "license": "CC BY-NC-SA 4.0",
+    "type": "Synthetic CCTV",
+    "total_images": 103,
+    "total_instances": 207,
+    "keypoints": 17,
+    "format": "COCO keypoints [17, 3]"
+  },
+  "model": {
+    "weights": "yolov8n-pose.pt",
+    "architecture": "YOLOv8n-pose",
+    "parameters": 3289964,
+    "device": "cpu",
+    "imgsz": 640
+  },
+  "metrics": {
+    "box_precision": 0.9994,
+    "box_recall": 0.9952,
+    "box_map50": 0.995,
+    "box_map50_95": 0.9629,
+    "pose_precision": 0.9994,
+    "pose_recall": 0.9952,
+    "pose_map50": 0.995,
+    "pose_map50_95": 0.8035,
+    "fitness": 1.7664
+  },
+  "latency_ms": {
+    "preprocess": 0.88,
+    "inference": 63.26,
+    "postprocess": 1.11,
+    "total": 65.25
+  }
+}

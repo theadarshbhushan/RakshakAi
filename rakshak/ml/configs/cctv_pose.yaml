@@ -1,0 +1,16 @@
+# Simuletic - CCTV Aggressive Pose & Fight Detection Free Sample
+# 103 synthetic CCTV images with YOLO pose labels (person bounding box + 17 keypoints)
+# Licence: CC BY-NC-SA 4.0 (Non-commercial, synthetic CCTV)
+
+path: data/raw_datasets/cctv_aggressive_poses/Aggressive_Poses_Dataset
+train: images
+val: images
+
+# Keypoints configuration (COCO format: 17 points, x/y/visibility)
+kpt_shape: [17, 3]
+flip_idx: [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
+
+# Classes
+nc: 1
+names:
+  0: person

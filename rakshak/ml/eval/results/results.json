@@ -482,5 +482,17 @@
       "expected": 0,
       "is_hard_negative": false
     }
-  ]
+  ],
+  "pose_quality": {
+    "dataset": "Simuletic CCTV Aggressive Pose & Fight Detection",
+    "license": "CC BY-NC-SA 4.0",
+    "sample_count": 103,
+    "instance_count": 207,
+    "model": "yolov8n-pose.pt",
+    "box_map50": 0.995,
+    "box_map50_95": 0.9629,
+    "pose_map50": 0.995,
+    "pose_map50_95": 0.8035,
+    "inference_ms": 63.26
+  }
 }
