@@ -53,7 +53,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   const handlePrintQrSheet = () => {
-    navigate('/settings/sos-qr')
+    navigate('/app/settings/sos-qr')
   }
 
   return (

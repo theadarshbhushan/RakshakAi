@@ -64,7 +64,7 @@ export const TopBar: React.FC<TopBarProps> = ({ wsStatus, onToggleMobileMenu }) 
     setUserMenuOpen(false)
     try {
       await login(email, pass)
-      navigate('/')
+      navigate('/app')
     } catch {
       // ignore
     }
@@ -131,7 +131,7 @@ export const TopBar: React.FC<TopBarProps> = ({ wsStatus, onToggleMobileMenu }) 
         {/* Approvals inbox badge for owner/admin */}
         {isOwnerOrAdmin && (
           <Link
-            to="/approvals"
+            to="/app/approvals"
             className="relative p-2 rounded-btn text-content-secondary hover:text-content-primary hover:bg-fill-subtle transition-colors"
             title="Approvals inbox"
           >
@@ -146,7 +146,7 @@ export const TopBar: React.FC<TopBarProps> = ({ wsStatus, onToggleMobileMenu }) 
 
         {/* Notifications bell */}
         <Link
-          to="/incidents"
+          to="/app/incidents"
           className="relative p-2 rounded-btn text-content-secondary hover:text-content-primary hover:bg-fill-subtle transition-colors"
           title="Open incidents"
         >

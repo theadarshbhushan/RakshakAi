@@ -13,7 +13,7 @@ export const NotFoundPage: React.FC = () => {
       <p className="text-[14px] text-content-secondary mt-1 max-w-sm mb-6">
         The safety dashboard view or incident you requested does not exist or may have been archived.
       </p>
-      <Link to="/">
+      <Link to="/app">
         <Button variant="primary" size="md">
           Return to Live Monitor
         </Button>

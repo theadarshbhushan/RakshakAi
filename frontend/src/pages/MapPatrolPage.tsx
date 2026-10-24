@@ -154,7 +154,7 @@ const ZoneDetailModal: React.FC<ZoneDetailModalProps> = ({ zoneId, onClose, zone
               type="button"
               onClick={() => {
                 onClose()
-                navigate('/settings/sos-qr')
+                navigate('/app/settings/sos-qr')
               }}
               className="inline-flex items-center gap-1 text-[12px] font-medium text-content-secondary hover:text-content-primary hover:underline"
             >
@@ -171,7 +171,7 @@ const ZoneDetailModal: React.FC<ZoneDetailModalProps> = ({ zoneId, onClose, zone
             size="sm"
             onClick={() => {
               onClose()
-              navigate(`/incidents?zone=${zoneId}`)
+              navigate(`/app/incidents?zone=${zoneId}`)
             }}
           >
             View incidents for this zone

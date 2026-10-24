@@ -148,7 +148,7 @@ export const SosQrPage: React.FC = () => {
         <p className="text-[13px] text-content-secondary mt-1 mb-4">
           Only hostel owners and system administrators can view and print student SOS QR sheets.
         </p>
-        <Link to="/settings">
+        <Link to="/app/settings">
           <Button variant="secondary" size="sm">
             Back to settings
           </Button>
@@ -167,7 +167,7 @@ export const SosQrPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
           <Link
-            to="/settings"
+            to="/app/settings"
             className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary hover:text-content-primary font-medium mb-2 transition-colors"
           >
             <ArrowLeft size={14} />

@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 size="md"
                 icon={<Home size={14} />}
                 onClick={() => {
-                  window.location.href = '/'
+                  window.location.href = '/app'
                 }}
               >
                 Back to monitor

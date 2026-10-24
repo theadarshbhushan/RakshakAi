@@ -230,7 +230,7 @@ export const IncidentQueuePage: React.FC = () => {
                     <tr
                       key={inc.id}
                       className="hover:bg-fill-subtle/40 transition-colors group cursor-pointer"
-                      onClick={() => navigate(`/incidents/${inc.id}`)}
+                      onClick={() => navigate(`/app/incidents/${inc.id}`)}
                     >
                       {/* Severity */}
                       <td className="py-3.5 px-4 whitespace-nowrap">

@@ -59,6 +59,14 @@ const withBoundary = (component: React.ReactNode, title?: string) => (
   <ErrorBoundary fallbackTitle={title}>{component}</ErrorBoundary>
 )
 
+import { LandingPage } from '@/pages/LandingPage'
+import { useParams } from 'react-router-dom'
+
+const IncidentRedirect = () => {
+  const { id } = useParams()
+  return <Navigate to={`/app/incidents/${id}`} replace />
+}
+
 export function App() {
   const { initAuth } = useAuthStore()
 
@@ -71,33 +79,52 @@ export function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
+          <Route path="/" element={withBoundary(<LandingPage />, 'Landing page error')} />
           <Route path="/login" element={withBoundary(<LoginPage />, 'Unable to load login')} />
           <Route path="/sos/:token" element={withBoundary(<StudentSosPage />, 'Unable to load SOS view')} />
           <Route path="/transparency" element={withBoundary(<StudentTransparencyPage />, 'Unable to load transparency')} />
 
-          {/* Protected app shell routes */}
+          {/* Protected app shell routes under /app */}
           <Route
+            path="/app"
             element={
               <ProtectedRoute>
                 <AppShell />
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={withBoundary(<LiveMonitorPage />, 'Live monitor error')} />
-            <Route path="/analyze" element={withBoundary(<AnalyzeFootagePage />, 'Footage analysis error')} />
-            <Route path="/incidents" element={withBoundary(<IncidentQueuePage />, 'Incident queue error')} />
-            <Route path="/incidents/:id" element={withBoundary(<IncidentDetailPage />, 'Incident details error')} />
-            <Route path="/approvals" element={withBoundary(<ApprovalsPage />, 'Approvals error')} />
-            <Route path="/map" element={withBoundary(<MapPatrolPage />, 'Campus map error')} />
-            <Route path="/cameras" element={withBoundary(<CamerasPage />, 'Camera registry error')} />
-            <Route path="/rules" element={withBoundary(<RulesZonesPage />, 'Rules & zones error')} />
-            <Route path="/calibration" element={withBoundary(<CalibrationPage />, 'Calibration error')} />
-            <Route path="/evaluation" element={withBoundary(<EvaluationPage />, 'Evaluation benchmark error')} />
-            <Route path="/privacy" element={withBoundary(<PrivacyAuditPage />, 'Privacy audit error')} />
-            <Route path="/settings" element={withBoundary(<SettingsPage />, 'Settings error')} />
-            <Route path="/settings/sos-qr" element={withBoundary(<SosQrPage />, 'SOS QR code error')} />
+            <Route index element={withBoundary(<LiveMonitorPage />, 'Live monitor error')} />
+            <Route path="analyze" element={withBoundary(<AnalyzeFootagePage />, 'Footage analysis error')} />
+            <Route path="incidents" element={withBoundary(<IncidentQueuePage />, 'Incident queue error')} />
+            <Route path="incidents/:id" element={withBoundary(<IncidentDetailPage />, 'Incident details error')} />
+            <Route path="approvals" element={withBoundary(<ApprovalsPage />, 'Approvals error')} />
+            <Route path="map" element={withBoundary(<MapPatrolPage />, 'Campus map error')} />
+            <Route path="cameras" element={withBoundary(<CamerasPage />, 'Camera registry error')} />
+            <Route path="rules" element={withBoundary(<RulesZonesPage />, 'Rules & zones error')} />
+            <Route path="calibration" element={withBoundary(<CalibrationPage />, 'Calibration error')} />
+            <Route path="evaluation" element={withBoundary(<EvaluationPage />, 'Evaluation benchmark error')} />
+            <Route path="privacy" element={withBoundary(<PrivacyAuditPage />, 'Privacy audit error')} />
+            <Route path="settings" element={withBoundary(<SettingsPage />, 'Settings error')} />
+            <Route path="settings/sos-qr" element={withBoundary(<SosQrPage />, 'SOS QR code error')} />
             <Route path="*" element={withBoundary(<NotFoundPage />, 'Page not found')} />
           </Route>
+
+          {/* Legacy redirects from root paths */}
+          <Route path="/analyze" element={<Navigate to="/app/analyze" replace />} />
+          <Route path="/incidents" element={<Navigate to="/app/incidents" replace />} />
+          <Route path="/incidents/:id" element={<IncidentRedirect />} />
+          <Route path="/approvals" element={<Navigate to="/app/approvals" replace />} />
+          <Route path="/map" element={<Navigate to="/app/map" replace />} />
+          <Route path="/cameras" element={<Navigate to="/app/cameras" replace />} />
+          <Route path="/rules" element={<Navigate to="/app/rules" replace />} />
+          <Route path="/calibration" element={<Navigate to="/app/calibration" replace />} />
+          <Route path="/evaluation" element={<Navigate to="/app/evaluation" replace />} />
+          <Route path="/privacy" element={<Navigate to="/app/privacy" replace />} />
+          <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+          <Route path="/settings/sos-qr" element={<Navigate to="/app/settings/sos-qr" replace />} />
+
+          {/* Catch-all for undefined root routes */}
+          <Route path="*" element={withBoundary(<NotFoundPage />, 'Page not found')} />
         </Routes>
 
         <Toaster

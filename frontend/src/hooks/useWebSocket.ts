@@ -91,7 +91,7 @@ export function useWebSocket() {
                 description: title,
                 action: {
                   label: 'Review now',
-                  onClick: () => navigate(`/incidents/${data?.id || data?._id}`),
+                  onClick: () => navigate(`/app/incidents/${data?.id || data?._id}`),
                 },
                 duration: 8000,
               })

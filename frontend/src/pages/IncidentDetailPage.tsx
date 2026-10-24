@@ -138,7 +138,7 @@ export const IncidentDetailPage: React.FC = () => {
         <p className="text-[13px] text-content-muted mt-1 mb-4">
           This incident may have been removed or does not exist.
         </p>
-        <Link to="/incidents">
+        <Link to="/app/incidents">
           <Button variant="secondary" size="sm">
             Back to incidents
           </Button>
@@ -251,7 +251,7 @@ export const IncidentDetailPage: React.FC = () => {
       {/* 1. Header with Breadcrumb, Meta line, and Action Buttons */}
       <div>
         <div className="flex items-center gap-2 text-[13px] text-content-muted mb-2">
-          <Link to="/incidents" className="hover:text-primary transition-colors flex items-center gap-1">
+          <Link to="/app/incidents" className="hover:text-primary transition-colors flex items-center gap-1">
             <ChevronLeft size={14} />
             <span>Incidents</span>
           </Link>

@@ -199,7 +199,7 @@ export const LiveMonitorPage: React.FC = () => {
               variant="primary"
               size="md"
               icon={<ArrowRight size={16} />}
-              onClick={() => navigate(`/incidents/${urgentIncident.id}`)}
+              onClick={() => navigate(`/app/incidents/${urgentIncident.id}`)}
             >
               Review now
             </Button>
@@ -257,7 +257,7 @@ export const LiveMonitorPage: React.FC = () => {
             </span>
           </div>
           <Link
-            to="/cameras"
+            to="/app/cameras"
             className="text-[13px] font-medium text-primary hover:underline"
           >
             Manage cameras

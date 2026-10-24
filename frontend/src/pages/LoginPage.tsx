@@ -37,7 +37,7 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true)
     try {
       await login(email, password)
-      navigate('/')
+      navigate('/app')
     } catch (err: any) {
       setLoginError(err.message || 'Invalid email or password.')
     } finally {
@@ -51,14 +51,14 @@ export const LoginPage: React.FC = () => {
       <div className="w-full md:w-1/2 flex flex-col justify-between p-8 sm:p-12 md:p-16 lg:p-20 bg-card">
         {/* Top Logo */}
         <div>
-          <div className="flex items-center gap-2.5">
+          <Link to="/" className="inline-flex items-center gap-2.5 group hover:opacity-90 transition-opacity">
             <div className="w-9 h-9 rounded-[8px] bg-primary flex items-center justify-center text-white shadow-soft">
               <ShieldCheck size={22} strokeWidth={2.4} />
             </div>
-            <span className="text-[20px] font-bold tracking-tight text-content-primary">
+            <span className="text-[20px] font-bold tracking-tight text-content-primary group-hover:text-primary transition-colors">
               RakshakAI
             </span>
-          </div>
+          </Link>
 
           <div className="mt-12 max-w-md">
             <h1 className="text-[26px] font-bold text-content-primary">Sign in</h1>
