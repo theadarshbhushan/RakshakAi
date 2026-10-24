@@ -4,32 +4,31 @@ Production-grade FastAPI application factory with Beanie ODM, Prometheus metrics
 rate limiting, security headers, per-tenant WebSockets, and structured logging.
 """
 from contextlib import asynccontextmanager
-import logging
 from typing import Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, status
-from fastapi.middleware.cors import CORSMiddleware
+
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
-from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+# from prometheus_fastapi_instrumentator import Instrumentator  # TODO [STABILIZATION]
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from prometheus_fastapi_instrumentator import Instrumentator
 
+from app.api.v1.api import api_v1_router
 from app.core.config import settings
-from app.core.logging import setup_logging, logger
-from app.core.middleware import RequestIdAndSecurityHeadersMiddleware
-from app.core.rate_limit import limiter
 from app.core.errors import (
     AppError,
     app_error_handler,
-    validation_error_handler,
     http_exception_handler,
     unhandled_exception_handler,
+    validation_error_handler,
 )
+from app.core.logging import logger, setup_logging
+from app.core.middleware import RequestIdAndSecurityHeadersMiddleware
+from app.core.rate_limit import limiter
 from app.core.security import decode_access_token
-from app.models.user import User
-from app.db.mongo import init_db, close_db
+from app.db.mongo import close_db, init_db
 from app.jobs.scheduler import start_scheduler, stop_scheduler
-from app.api.v1.api import api_v1_router
+from app.models.user import User
 from app.realtime.ws import ws_hub
 
 
@@ -95,7 +94,8 @@ def create_app() -> FastAPI:
     app.include_router(api_v1_router)
 
     # 5. Prometheus Metrics
-    Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+    # TODO [STABILIZATION]: Prometheus metrics disabled in stabilization mode
+    # Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
     # 6. WebSocket Endpoint with Per-Tenant Room Isolation
     @app.websocket("/api/v1/ws")

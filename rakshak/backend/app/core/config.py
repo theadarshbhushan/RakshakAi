@@ -4,9 +4,9 @@ Loads environment variables and enforces validation and secret security.
 """
 from pathlib import Path
 from typing import List, Optional
+
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BACKEND_DIR.parent

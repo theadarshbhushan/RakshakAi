@@ -2,23 +2,28 @@
 Concrete TenantScopedRepository classes for all aggregate collections.
 All database access is strictly isolated by tenant org_id.
 """
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
-import json
 import hashlib
-from beanie import PydanticObjectId
+import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from app.db.tenant import TenantScopedRepository
-from app.models.organization import Site
-from app.models.zone import Zone, Camera
-from app.models.signal import Signal, AccessEvent
-from app.models.incident import Incident, Feedback, ThresholdHistory
-from app.models.rules import RuleDocument
-from app.models.user import ApiKey, Invitation
-from app.models.privacy import BreakglassGrant
 from app.models.audit import AuditLog, utc_now
+from app.models.incident import Feedback, Incident, ThresholdHistory
+from app.models.organization import Site
+from app.models.privacy import BreakglassGrant
+from app.models.signal import AccessEvent, Signal
+from app.models.user import ApiKey, Invitation
+from app.models.zone import Camera, Zone
 
 GENESIS_PREV_HASH = "0" * 64
+
+
+def format_iso_canonical(dt: datetime) -> str:
+    """Format datetime into deterministic canonical string for hash chain verification."""
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
 
 
 class SiteRepository(TenantScopedRepository[Site]):
@@ -101,17 +106,27 @@ class AuditRepository(TenantScopedRepository[AuditLog]):
         super().__init__(AuditLog, org_id)
 
     @staticmethod
-    def canonical_json(seq: int, ts_iso: str, actor: Dict[str, Any], action: str, target: str, reason: str, ip: Optional[str], user_agent: Optional[str], request_id: Optional[str]) -> str:
+    def canonical_json(
+        seq: int,
+        ts_iso: str,
+        actor: Dict[str, Any],
+        action: str,
+        target: str,
+        reason: str,
+        ip: Optional[str],
+        user_agent: Optional[str],
+        request_id: Optional[str],
+    ) -> str:
         data = {
-            "action": action,
-            "actor": actor,
-            "ip": ip or "",
-            "reason": reason,
-            "request_id": request_id or "",
-            "seq": seq,
-            "target": target,
-            "ts": ts_iso,
-            "user_agent": user_agent or "",
+            "action": str(action),
+            "actor": {str(k): str(v) for k, v in sorted(actor.items())},
+            "ip": str(ip or ""),
+            "reason": str(reason),
+            "request_id": str(request_id or ""),
+            "seq": int(seq),
+            "target": str(target),
+            "ts": str(ts_iso),
+            "user_agent": str(user_agent or ""),
         }
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
@@ -133,16 +148,17 @@ class AuditRepository(TenantScopedRepository[AuditLog]):
     ) -> AuditLog:
         """Append-only tamper-evident audit record with cryptographic hash chain."""
         timestamp = ts or utc_now()
-        if timestamp.tzinfo is None:
-            timestamp = timestamp.replace(tzinfo=timezone.utc)
-        ts_iso = timestamp.isoformat()
+        # Truncate to millisecond precision to match MongoDB BSON date serialization
+        timestamp = timestamp.replace(microsecond=(timestamp.microsecond // 1000) * 1000)
+        ts_iso = format_iso_canonical(timestamp)
 
         # Find latest record for this tenant
-        last_rec = await AuditLog.find({"org_id": self.org_id}).sort("-seq").first_or_none()
-        if last_rec is None:
+        all_recs = await AuditLog.find({"org_id": self.org_id}).to_list()
+        if not all_recs:
             seq = 1
             prev_hash = GENESIS_PREV_HASH
         else:
+            last_rec = max(all_recs, key=lambda r: r.seq)
             seq = last_rec.seq + 1
             prev_hash = last_rec.hash
 
@@ -168,10 +184,11 @@ class AuditRepository(TenantScopedRepository[AuditLog]):
 
     async def verify_chain(self) -> Dict[str, Any]:
         """Verify the integrity of this tenant's cryptographic audit hash chain."""
-        records = await AuditLog.find({"org_id": self.org_id}).sort("+seq").to_list()
-        if not records:
+        all_recs = await AuditLog.find({"org_id": self.org_id}).to_list()
+        if not all_recs:
             return {"valid": True, "total_records": 0, "message": "Audit log is empty."}
 
+        records = sorted(all_recs, key=lambda r: r.seq)
         expected_prev = GENESIS_PREV_HASH
 
         for r in records:
@@ -183,7 +200,7 @@ class AuditRepository(TenantScopedRepository[AuditLog]):
                     "message": f"Broken chain link at seq {r.seq}: previous hash mismatch",
                 }
 
-            ts_iso = r.ts.replace(tzinfo=timezone.utc).isoformat() if r.ts.tzinfo is None else r.ts.isoformat()
+            ts_iso = format_iso_canonical(r.ts)
             payload = self.canonical_json(r.seq, ts_iso, r.actor, r.action, r.target, r.reason, r.ip, r.user_agent, r.request_id)
             computed = self.compute_hash(r.prev_hash, payload)
 

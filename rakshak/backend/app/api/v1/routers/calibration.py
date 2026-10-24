@@ -2,19 +2,17 @@
 Calibration router (/api/v1/calibration).
 Inspect detector sensitivity thresholds and revert auto-calibration history adjustments.
 """
-from typing import List, Dict, Any
 from fastapi import APIRouter, Depends
-from beanie import PydanticObjectId
 
 from app.core.deps import get_current_user, require_permission
 from app.models.incident import ThresholdHistory
 from app.models.rules import RuleDocument
 from app.models.user import User
-from app.services.incident_service import IncidentService
 from app.schemas.domain import (
-    ThresholdHistoryResponse,
     CalibrationOverviewResponse,
+    ThresholdHistoryResponse,
 )
+from app.services.incident_service import IncidentService
 
 router = APIRouter(prefix="/calibration", tags=["Calibration"])
 

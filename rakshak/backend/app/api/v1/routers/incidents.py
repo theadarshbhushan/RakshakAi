@@ -2,24 +2,25 @@
 Incidents router (/api/v1/incidents).
 Incident triage, explainability, acknowledgment, and human review.
 """
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, Query, status
+from datetime import timedelta
+from typing import Any, Dict, Optional
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_user, require_permission
 from app.core.errors import NotFoundError
 from app.models.incident import Incident
-from app.models.signal import Signal, AccessEvent
+from app.models.signal import AccessEvent, Signal
 from app.models.user import User
-from app.services.incident_service import IncidentService
 from app.privacy.pseudonymize import sanitize_for_api
 from app.schemas.domain import (
     IncidentResponse,
     IncidentReviewRequest,
-    SignalResponse,
     PaginatedResponse,
+    SignalResponse,
 )
+from app.services.incident_service import IncidentService
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 

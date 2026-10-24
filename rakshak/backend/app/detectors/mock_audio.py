@@ -5,14 +5,14 @@ Supports multi-stage audio inference where stage 2 context filter suppresses amb
 non-emergency noises (e.g. party cheering or laughter), flagging suppress_reason.
 """
 import asyncio
-from datetime import timedelta
 import logging
-from typing import Callable, Awaitable, List, Dict, Any, Optional
+from datetime import timedelta
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from app.models import Signal
 from app.detectors.base import BaseDetector, SimulationClock
+from app.models.signal import Signal
 
-logger = logging.getLogger("rakshak.detectors.mock_audio")
+logger = logging.getLogger("rakshakai.detectors.mock_audio")
 
 
 class MockAudioDetector(BaseDetector):
@@ -50,7 +50,6 @@ class MockAudioDetector(BaseDetector):
             suppressed = bool(item.get("suppressed", False))
             suppress_reason = item.get("suppress_reason")
 
-            # Context filtering check if marked in details
             context_label = details.get("context_label")
             if context_label in ("birthday_party", "celebration", "sports_cheer"):
                 suppressed = True
@@ -61,12 +60,12 @@ class MockAudioDetector(BaseDetector):
 
             current_sim_time = sim_clock.now()
 
-            # For suppressed non-incident signals, assign TTL evidence_expires_at
             evidence_expires_at = None
             if suppressed:
                 evidence_expires_at = current_sim_time + timedelta(days=7)
 
             signal = Signal(
+                org_id="",  # Injected by runner
                 ts=current_sim_time,
                 modality="audio",
                 kind=kind,
@@ -79,6 +78,7 @@ class MockAudioDetector(BaseDetector):
                 suppress_reason=suppress_reason,
                 evidence_path=evidence_path,
                 evidence_expires_at=evidence_expires_at,
+                source="mock_audio",
             )
 
             logger.info(

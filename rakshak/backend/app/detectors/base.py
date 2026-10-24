@@ -2,11 +2,11 @@
 Abstract Detector interface for RakshakAI.
 Clean pluggable interface enabling modular swapping between mock detectors and real ML models.
 """
-from abc import ABC, abstractmethod
 import asyncio
-from datetime import datetime, timezone, timedelta
 import time
-from typing import Callable, Awaitable, Optional
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta, timezone
+from typing import Awaitable, Callable
 
 from app.models import Signal
 

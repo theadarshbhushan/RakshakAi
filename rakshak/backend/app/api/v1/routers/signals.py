@@ -2,15 +2,16 @@
 Signals router (/api/v1/signals).
 Query individual video, audio, and access control detector signals.
 """
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, Query
+from typing import Any, Dict, Optional
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_user, require_permission
 from app.models.signal import Signal
 from app.models.user import User
 from app.privacy.pseudonymize import sanitize_for_api
-from app.schemas.domain import SignalResponse, PaginatedResponse
+from app.schemas.domain import PaginatedResponse, SignalResponse
 
 router = APIRouter(prefix="/signals", tags=["Signals"])
 

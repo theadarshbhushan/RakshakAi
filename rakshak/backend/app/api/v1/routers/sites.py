@@ -2,16 +2,15 @@
 Sites router (/api/v1/sites).
 Campus buildings and hostel site management with plan limit enforcement.
 """
-from typing import List, Optional
+from typing import List
+
 from fastapi import APIRouter, Depends, status
-from beanie import PydanticObjectId
 
 from app.core.deps import get_current_user, require_permission
-from app.core.errors import NotFoundError
 from app.models.organization import Site
 from app.models.user import User
-from app.services.org_service import OrgService
 from app.schemas.organization import SiteCreateRequest, SiteResponse
+from app.services.org_service import OrgService
 
 router = APIRouter(prefix="/sites", tags=["Sites"])
 

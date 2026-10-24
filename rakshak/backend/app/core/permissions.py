@@ -32,7 +32,7 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
         "incidents:read", "incidents:ack", "incidents:review", "incidents:escalations",
         "evidence:read_public", "signals:read",
         "rules:read", "zones:read", "cameras:read", "sites:read", "users:read",
-        "scenarios:run", "calibration:read",
+        "scenarios:run", "calibration:read", "calibration:revert",
     },
     "guard": {
         "incidents:read", "incidents:ack", "incidents:review",

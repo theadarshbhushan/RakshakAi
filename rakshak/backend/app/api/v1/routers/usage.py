@@ -1,19 +1,21 @@
 """
 Usage & Analytics router (/api/v1/usage).
 Monitors subscription plan usage, quotas, and monthly incident metrics.
+TODO [STABILIZATION]: Router disabled and unmounted in main app during stabilization.
 """
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_user
-from app.models.organization import Organization, Site
-from app.models.zone import Camera
-from app.models.user import User
 from app.models.incident import Incident
+from app.models.organization import Organization, Site
 from app.models.signal import Signal
-from app.services.org_service import OrgService
+from app.models.user import User
+from app.models.zone import Camera
 from app.schemas.domain import UsageResponse
+from app.services.org_service import OrgService
 
 router = APIRouter(prefix="/usage", tags=["Usage & Billing"])
 

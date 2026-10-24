@@ -5,12 +5,11 @@ Evaluates access events against:
 2. Restricted zone role permissions (e.g. Terrace restricted to warden/maintenance)
 3. Tailgating correlation: compares line crossings vs granted card swipes at entry doors
 """
-from datetime import datetime, time, timedelta, timezone
 import logging
-from typing import Callable, Awaitable, Dict, Any, Optional
+from datetime import datetime, time, timedelta
+from typing import Any, Awaitable, Callable, Dict, Optional
 
-from app.models.signal import Signal, AccessEvent
-from app.models.zone import Zone
+from app.models.signal import AccessEvent, Signal
 
 logger = logging.getLogger("rakshakai.detectors.access_rules")
 

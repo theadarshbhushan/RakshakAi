@@ -1,17 +1,17 @@
 """
 Incident lifecycle management: Acknowledgment, Human Review, Feedback, and False Alarm Calibration.
 """
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List
+from typing import List, Optional
+
 from beanie import PydanticObjectId
 
-from app.core.errors import NotFoundError, AppError
-from app.models.incident import Incident, Feedback, ThresholdHistory
-from app.models.signal import Signal
+from app.core.errors import AppError, NotFoundError
+from app.models.incident import Feedback, Incident, ThresholdHistory
 from app.models.rules import RuleDocument
+from app.models.signal import Signal
 from app.models.user import User, utc_now
-from app.repositories.repos import AuditRepository
 from app.realtime.ws import ws_hub
+from app.repositories.repos import AuditRepository
 
 
 class IncidentService:
@@ -123,14 +123,16 @@ class IncidentService:
         """
         Raise detection threshold by +0.05 (capped at 0.90) for all detectors that contributed to false alarm.
         """
-        # Fetch active rules for org
         active_rules = await RuleDocument.find_one({"org_id": org_id, "is_active": True})
         if not active_rules:
             return
 
         # Fetch signals attached to incident
-        obj_ids = [PydanticObjectId(sid) for sid in incident.signal_ids if len(sid) == 24]
-        signals = await Signal.find({"_id": {"$in": obj_ids}, "org_id": org_id, "suppressed": False}).to_list()
+        signals: List[Signal] = []
+        for sid in incident.signal_ids:
+            s_doc = await Signal.get(PydanticObjectId(sid))
+            if s_doc and not s_doc.suppressed:
+                signals.append(s_doc)
 
         zone_rules = active_rules.zones.get(incident.zone_id, {})
         current_thresholds = zone_rules.get("thresholds", {
@@ -168,7 +170,7 @@ class IncidentService:
 
     @staticmethod
     async def revert_calibration(org_id: str, history_id: str, user: User) -> ThresholdHistory:
-        """Revert a calibration threshold back to old_value."""
+        """Revert a calibration threshold modification back to old_value."""
         history = await ThresholdHistory.find_one({"_id": PydanticObjectId(history_id), "org_id": org_id})
         if not history:
             raise NotFoundError("ThresholdHistory", history_id)

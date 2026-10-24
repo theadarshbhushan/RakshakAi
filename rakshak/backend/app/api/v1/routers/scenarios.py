@@ -2,8 +2,9 @@
 Scenarios router (/api/v1/scenarios).
 Executes simulated test scenarios (S1-S4) to evaluate multi-modal corroboration.
 """
-from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, Query, status
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_user, require_permission
 from app.models.user import User

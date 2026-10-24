@@ -3,10 +3,12 @@ FastAPI middlewares for Request-ID propagation, security headers, and structured
 """
 import time
 import uuid
+
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-import structlog
+
 from app.core.config import settings
 
 logger = structlog.get_logger("rakshakai.access")

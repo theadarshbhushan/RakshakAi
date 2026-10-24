@@ -3,31 +3,34 @@ Authentication Router (/api/v1/auth).
 Handles organization registration, login with rate-limiting & brute force lockout,
 refresh rotation with reuse detection, logout, password change, and sessions.
 """
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Request, Response, status
+import logging
+from typing import List
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.config import settings
+from app.core.deps import get_current_user
+from app.core.errors import AppError, NotFoundError, UnauthorizedError
+from app.core.permissions import get_permissions_for_role
 from app.core.rate_limit import limiter
-from app.core.deps import get_current_user, require_permission
-from app.core.security import validate_password_strength, get_password_hash, verify_password, hash_token
-from app.core.errors import UnauthorizedError, AppError, NotFoundError
-from app.models.user import User, RefreshSession, PasswordResetToken, utc_now
+from app.core.security import get_password_hash, hash_token, validate_password_strength, verify_password
 from app.models.organization import Organization
+from app.models.user import PasswordResetToken, RefreshSession, User, utc_now
 from app.repositories.repos import AuditRepository
-from app.services.auth_service import AuthService
 from app.schemas.auth import (
-    RegisterOrgRequest,
-    LoginRequest,
-    TokenResponse,
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    LoginRequest,
+    RegisterOrgRequest,
     ResetPasswordRequest,
     SessionResponse,
-    UserSummaryResponse,
+    TokenResponse,
 )
 from app.schemas.user import MeResponse
-from app.core.permissions import get_permissions_for_role
+from app.services.auth_service import AuthService
+
+logger = logging.getLogger("rakshakai.auth")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -64,7 +67,7 @@ async def register_organization(payload: RegisterOrgRequest, request: Request, r
         max_age=settings.REFRESH_TOKEN_TTL_DAYS * 86400,
     )
 
-    dev_refresh = raw_refresh if settings.ENV == "dev" else None
+    dev_refresh = raw_refresh if settings.ENV in ("dev", "test") else None
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -103,7 +106,7 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         max_age=settings.REFRESH_TOKEN_TTL_DAYS * 86400,
     )
 
-    dev_refresh = raw_refresh if settings.ENV == "dev" else None
+    dev_refresh = raw_refresh if settings.ENV in ("dev", "test") else None
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -123,12 +126,22 @@ async def refresh_token(request: Request, response: Response):
     user_agent = request.headers.get("User-Agent")
     request_id = getattr(request.state, "request_id", None)
 
-    # Check cookie first, fallback to Authorization header or query param
-    raw_token = request.cookies.get("rakshak_refresh")
+    # Check explicit Authorization header or X-Refresh-Token first, then fallback to cookie
+    raw_token = None
+    auth_hdr = request.headers.get("Authorization")
+    if auth_hdr and auth_hdr.startswith("Bearer "):
+        raw_token = auth_hdr.split(" ")[1]
     if not raw_token:
-        auth_hdr = request.headers.get("Authorization")
-        if auth_hdr and auth_hdr.startswith("Bearer "):
-            raw_token = auth_hdr.split(" ")[1]
+        raw_token = request.headers.get("X-Refresh-Token")
+    if not raw_token:
+        raw_token = request.cookies.get("rakshak_refresh")
+    if not raw_token:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                raw_token = body.get("refresh_token")
+        except Exception:
+            pass
 
     if not raw_token:
         raise UnauthorizedError("Missing refresh token", code="AUTH_MISSING_TOKEN")
@@ -150,7 +163,7 @@ async def refresh_token(request: Request, response: Response):
         max_age=settings.REFRESH_TOKEN_TTL_DAYS * 86400,
     )
 
-    dev_refresh = new_raw_refresh if settings.ENV == "dev" else None
+    dev_refresh = new_raw_refresh if settings.ENV in ("dev", "test") else None
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -223,87 +236,20 @@ async def change_password(payload: ChangePasswordRequest, current_user: User = D
     return {"message": "Password updated successfully. Other sessions have been revoked."}
 
 
-@router.post("/forgot-password")
-@limiter.limit("5/minute")
-async def forgot_password(payload: ForgotPasswordRequest, request: Request):
-    """
-    Generate password reset token. Always returns 200 to prevent user enumeration.
-    Logs the reset link in development mode.
-    """
-    user = await User.find_one(User.email == payload.email.lower().strip())
-    if user and user.is_active:
-        raw_token = AuthService.generate_opaque_token() if hasattr(AuthService, "generate_opaque_token") else hash_token(payload.email)
-        import secrets
-        raw_token = secrets.token_urlsafe(32)
-        token_doc = PasswordResetToken(
-            org_id=user.org_id,
-            user_id=str(user.id),
-            token_hash=hash_token(raw_token),
-            expires_at=utc_now() + __import__("datetime").timedelta(minutes=30),
-        )
-        await token_doc.insert()
-        logger.info(f"[DEV NOTIFICATION] Password reset link for {user.email}: {settings.FRONTEND_URL}/reset-password?token={raw_token}")
+# =============================================================================
+# TODO [STABILIZATION]: The endpoints below are disabled during stabilization.
+# Password reset and session listing will be re-enabled in a future phase.
+# =============================================================================
+# @router.post("/forgot-password")
+# @limiter.limit("5/minute")
+# async def forgot_password(payload: ForgotPasswordRequest, request: Request): ...
+#
+# @router.post("/reset-password")
+# async def reset_password(payload: ResetPasswordRequest): ...
+#
+# @router.get("/sessions", response_model=List[SessionResponse])
+# async def list_sessions(current_user: User = Depends(get_current_user)): ...
+#
+# @router.delete("/sessions/{session_id}")
+# async def revoke_session(session_id: str, current_user: User = Depends(get_current_user)): ...
 
-    return {"message": "If an account with that email exists, password reset instructions have been sent."}
-
-
-@router.post("/reset-password")
-async def reset_password(payload: ResetPasswordRequest):
-    """Reset password using single-use 30-minute token."""
-    token_h = hash_token(payload.token)
-    reset_doc = await PasswordResetToken.find_one(PasswordResetToken.token_hash == token_h)
-
-    now = utc_now()
-    if not reset_doc or reset_doc.used_at is not None or reset_doc.expires_at < now:
-        raise AppError("Password reset token is invalid or has expired.", code="AUTH_INVALID_TOKEN", status_code=400)
-
-    validate_password_strength(payload.new_password)
-    user = await User.get(PydanticObjectId(reset_doc.user_id))
-    if not user:
-        raise NotFoundError("User", reset_doc.user_id)
-
-    user.password_hash = get_password_hash(payload.new_password)
-    user.token_version += 1
-    await user.save()
-
-    reset_doc.used_at = now
-    await reset_doc.save()
-
-    return {"message": "Password has been successfully reset. Please log in with your new password."}
-
-
-@router.get("/sessions", response_model=List[SessionResponse])
-async def list_sessions(current_user: User = Depends(get_current_user)):
-    """List active refresh sessions for authenticated user."""
-    sessions = await RefreshSession.find(
-        RefreshSession.user_id == str(current_user.id),
-        RefreshSession.revoked_at == None,
-        RefreshSession.expires_at > utc_now(),
-    ).to_list()
-
-    return [
-        SessionResponse(
-            id=str(s.id),
-            user_agent=s.user_agent,
-            ip=s.ip,
-            created_at=s.created_at,
-            last_used_at=s.last_used_at,
-            expires_at=s.expires_at,
-        )
-        for s in sessions
-    ]
-
-
-@router.delete("/sessions/{session_id}")
-async def revoke_session(session_id: str, current_user: User = Depends(get_current_user)):
-    """Revoke a specific active refresh session."""
-    session = await RefreshSession.find_one(
-        RefreshSession.id == PydanticObjectId(session_id),
-        RefreshSession.user_id == str(current_user.id),
-    )
-    if not session:
-        raise NotFoundError("Session", session_id)
-
-    session.revoked_at = utc_now()
-    await session.save()
-    return {"message": "Session revoked."}

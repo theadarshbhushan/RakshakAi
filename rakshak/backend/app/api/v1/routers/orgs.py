@@ -3,14 +3,13 @@ Organization router (/api/v1/org).
 Tenant details and SaaS plan upgrades.
 """
 from fastapi import APIRouter, Depends
-from beanie import PydanticObjectId
 
-from app.core.deps import get_current_user, get_current_org, require_permission
+from app.core.deps import get_current_org, get_current_user, require_permission
 from app.core.errors import AppError
 from app.models.organization import Organization
 from app.models.user import User
 from app.repositories.repos import AuditRepository
-from app.schemas.organization import OrgResponse, OrgPlanUpdateRequest
+from app.schemas.organization import OrgPlanUpdateRequest, OrgResponse
 from app.services.org_service import PLANS
 
 router = APIRouter(prefix="/org", tags=["Organizations"])

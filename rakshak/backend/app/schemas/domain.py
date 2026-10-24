@@ -2,7 +2,8 @@
 Pydantic schemas for Signals, Incidents, Calibration, Privacy, Audit, Usage, and Pagination.
 """
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Generic, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
+
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")

@@ -2,12 +2,13 @@
 Users router (/api/v1/users).
 Team member listing, role assignment, and soft deletion.
 """
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
+from typing import List
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import get_current_user, require_permission
-from app.core.errors import NotFoundError, ForbiddenError, AppError
+from app.core.errors import AppError, ForbiddenError, NotFoundError
 from app.models.user import User, utc_now
 from app.repositories.repos import AuditRepository
 from app.schemas.user import UserResponse, UserUpdateRequest

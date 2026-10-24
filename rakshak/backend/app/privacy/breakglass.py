@@ -4,10 +4,11 @@ Admins can request emergency access to restricted evidence for an incident.
 The issued token is scoped to that specific incident, valid for 10 minutes,
 stored only as an irreversible SHA-256 hash in the database, and audited.
 """
-import secrets
 import hashlib
-from datetime import datetime, timedelta, timezone
-from typing import Tuple, Optional
+import secrets
+from datetime import datetime, timedelta
+from typing import Tuple
+
 from app.models.privacy import BreakglassGrant
 from app.models.user import utc_now
 from app.repositories.repos import AuditRepository

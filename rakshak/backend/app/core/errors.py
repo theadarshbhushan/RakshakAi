@@ -4,9 +4,11 @@ Generates uniform API error responses in format:
 {"error": {"code": "...", "message": "...", "request_id": "...", "details": {...}}}
 """
 from typing import Any, Dict, Optional
-from fastapi import Request, HTTPException, status
-from fastapi.responses import JSONResponse
+
+from fastapi import HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 from app.core.logging import logger
 
 

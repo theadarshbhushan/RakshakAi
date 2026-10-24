@@ -3,9 +3,11 @@ Tenant-Scoped Repository Base for strict multi-tenant isolation.
 Automatically injects the authenticated principal's org_id into all database queries and mutations.
 Accessing another tenant's resource returns a 404 NotFoundError to prevent existence enumeration.
 """
-from typing import TypeVar, Generic, Type, List, Optional, Any, Dict
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+
 from beanie import Document, PydanticObjectId
-from app.core.errors import NotFoundError, ForbiddenError
+
+from app.core.errors import ForbiddenError, NotFoundError
 
 T = TypeVar("T", bound=Document)
 

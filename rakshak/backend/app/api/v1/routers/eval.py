@@ -3,8 +3,10 @@ Evaluation router (/api/v1/eval).
 Returns multi-modal model precision, recall, and detection latency benchmark metrics.
 """
 import json
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter
+
 from app.core.config import settings
 
 router = APIRouter(prefix="/eval", tags=["Evaluation"])

@@ -2,9 +2,10 @@
 Breakglass grant model for emergency restricted evidence access.
 """
 from datetime import datetime, timezone
-from pydantic import Field
+
 from beanie import Document
-from pymongo import IndexModel, ASCENDING
+from pydantic import Field
+from pymongo import ASCENDING, IndexModel
 
 
 def utc_now() -> datetime:

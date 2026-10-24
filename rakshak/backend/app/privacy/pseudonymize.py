@@ -4,7 +4,8 @@ Strictly ensures raw card IDs and personal identifiers never leave the backend.
 Salted SHA-256 is used for irreversibly pseudonymizing credentials.
 """
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from app.core.config import settings
 
 

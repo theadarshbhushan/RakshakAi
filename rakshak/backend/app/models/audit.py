@@ -4,9 +4,10 @@ Each tenant organization maintains an independent, unbroken hash chain.
 """
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
-from pydantic import Field
+
 from beanie import Document
-from pymongo import IndexModel, ASCENDING
+from pydantic import Field
+from pymongo import ASCENDING, IndexModel
 
 
 def utc_now() -> datetime:

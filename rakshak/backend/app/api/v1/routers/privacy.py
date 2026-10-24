@@ -5,29 +5,30 @@ Strictly ensures raw card IDs and biometric identities are never handled or leak
 """
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, Query, Header, HTTPException, status
-from fastapi.responses import FileResponse
+from typing import Optional
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, Header, Query
+from fastapi.responses import FileResponse
 
 from app.core.config import settings
 from app.core.deps import get_current_user, require_permission
+from app.core.errors import AppError, ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.security import generate_opaque_token, hash_token
-from app.core.errors import UnauthorizedError, ForbiddenError, NotFoundError, AppError
-from app.models.privacy import BreakglassGrant
-from app.models.signal import Signal, AccessEvent
 from app.models.incident import Incident
 from app.models.organization import Organization
+from app.models.privacy import BreakglassGrant
+from app.models.signal import Signal
 from app.models.user import User, utc_now
-from app.repositories.repos import AuditRepository
 from app.privacy.retention import execute_retention_purge, get_privacy_inventory
-from app.services.org_service import OrgService
+from app.repositories.repos import AuditRepository
 from app.schemas.domain import (
     BreakglassRequest,
     BreakglassResponse,
-    PrivacySettingsRequest,
     PrivacyInventoryResponse,
+    PrivacySettingsRequest,
 )
+from app.services.org_service import OrgService
 
 router = APIRouter(tags=["Privacy & Evidence"])
 
@@ -115,9 +116,9 @@ async def get_evidence_file(
             "org_id": current_user.org_id,
             "token_hash": token_h,
             "incident_id": signal.incident_id,
-            "expires_at": {"$gt": now},
         })
-        if not grant:
+        from app.fusion.corroboration import ensure_utc
+        if not grant or (grant.expires_at and ensure_utc(grant.expires_at) <= now):
             raise ForbiddenError("Break-glass token is invalid, expired, or not authorized for this incident.")
 
     # Locate evidence file on local disk

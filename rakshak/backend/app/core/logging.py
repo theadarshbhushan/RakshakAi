@@ -4,7 +4,9 @@ Outputs colored human-friendly logs in dev, and machine-readable JSON in prod.
 """
 import logging
 import sys
+
 import structlog
+
 from app.core.config import settings
 
 

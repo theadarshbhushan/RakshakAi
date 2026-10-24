@@ -28,7 +28,7 @@ from app.models.rules import RuleDocument
 from app.repositories.repos import AuditRepository
 
 
-async def seed() -> None:
+async def seed(close_when_done: bool = False) -> None:
     print(f"Connecting to database [ENV={settings.ENV}, USE_MOCK_DB={settings.USE_MOCK_DB}]...")
     await init_db()
 
@@ -218,8 +218,9 @@ async def seed() -> None:
     print("Health Status:     http://localhost:8000/api/v1/health")
     print("=" * 80 + "\n")
 
-    await close_db()
+    if close_when_done:
+        await close_db()
 
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    asyncio.run(seed(close_when_done=True))

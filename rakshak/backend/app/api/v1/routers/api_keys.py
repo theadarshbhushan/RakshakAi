@@ -1,21 +1,23 @@
 """
 API Keys router (/api/v1/api-keys).
 Provisioning and revoking machine API keys for edge device detectors.
+TODO [STABILIZATION]: Router disabled and unmounted in main app during stabilization.
 """
 from typing import List
-from fastapi import APIRouter, Depends, status
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, status
 
 from app.core.deps import get_current_user, require_permission
 from app.core.errors import NotFoundError
-from app.models.user import User, ApiKey, utc_now
+from app.models.user import ApiKey, User, utc_now
 from app.repositories.repos import AuditRepository
-from app.services.org_service import OrgService
 from app.schemas.organization import (
     ApiKeyCreateRequest,
     ApiKeyCreateResponse,
     ApiKeyResponse,
 )
+from app.services.org_service import OrgService
 
 router = APIRouter(prefix="/api-keys", tags=["API Keys"])
 

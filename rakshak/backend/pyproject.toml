@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rakshakai-backend"
+version = "1.0.0"
+description = "RakshakAI: Multi-Tenant AI Campus/Hostel Safety Platform Backend"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::pydantic.PydanticDeprecatedSince20",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",  # line too long
+    "E711",  # comparison to None
+    "E712",  # comparison to True/False
+]

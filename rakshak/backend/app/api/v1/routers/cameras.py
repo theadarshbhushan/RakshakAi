@@ -3,15 +3,15 @@ Cameras router (/api/v1/cameras).
 Camera configuration with plan quota limit enforcement.
 """
 from typing import List
+
 from fastapi import APIRouter, Depends, status
-from beanie import PydanticObjectId
 
 from app.core.deps import get_current_user, require_permission
-from app.core.errors import NotFoundError, ConflictError
-from app.models.zone import Camera
+from app.core.errors import ConflictError
 from app.models.user import User
-from app.services.org_service import OrgService
+from app.models.zone import Camera
 from app.schemas.organization import CameraCreateRequest, CameraResponse
+from app.services.org_service import OrgService
 
 router = APIRouter(prefix="/cameras", tags=["Cameras"])
 

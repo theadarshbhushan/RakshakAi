@@ -4,9 +4,10 @@ All tenant-scoped with org_id.
 """
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from pydantic import Field
+
 from beanie import Document
-from pymongo import IndexModel, ASCENDING
+from pydantic import Field
+from pymongo import ASCENDING, IndexModel
 
 
 def utc_now() -> datetime:

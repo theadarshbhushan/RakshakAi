@@ -2,9 +2,10 @@
 MongoDB connection and Beanie ODM initialization for multi-tenant SaaS backend.
 """
 import re
-from typing import Optional, Dict, Any
-from beanie import init_beanie
+from typing import Any, Dict, Optional
+
 import motor.motor_asyncio
+from beanie import init_beanie
 from mongomock_motor import AsyncMongoMockClient
 
 from app.core.config import settings

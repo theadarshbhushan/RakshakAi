@@ -3,8 +3,10 @@ Audit router (/api/v1/audit).
 Append-only, tamper-evident cryptographic hash chain verification.
 No update or delete endpoints exist.
 """
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, Depends, Query
+
 from app.core.deps import get_current_user, require_permission
 from app.models.audit import AuditLog
 from app.models.user import User

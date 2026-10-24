@@ -4,7 +4,8 @@ Maintains separate connection rooms per tenant organization (org_id).
 Guarantees that alerts and real-time events never leak across organizations.
 """
 import logging
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 from fastapi import WebSocket
 
 logger = logging.getLogger("rakshakai.realtime.ws")

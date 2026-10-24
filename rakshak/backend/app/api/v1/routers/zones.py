@@ -3,13 +3,13 @@ Zones router (/api/v1/zones).
 Hostel zone security definitions and normalized polygon boundaries.
 """
 from typing import List
+
 from fastapi import APIRouter, Depends, status
-from beanie import PydanticObjectId
 
 from app.core.deps import get_current_user, require_permission
-from app.core.errors import NotFoundError, ConflictError
-from app.models.zone import Zone
+from app.core.errors import ConflictError, NotFoundError
 from app.models.user import User
+from app.models.zone import Zone
 from app.schemas.organization import ZoneCreateRequest, ZoneResponse
 
 router = APIRouter(prefix="/zones", tags=["Zones"])

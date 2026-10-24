@@ -4,20 +4,20 @@ Replays scripted multi-modal timeline slices against the real Fusion and Access 
 using an accelerated SimulationClock.
 """
 import asyncio
-from datetime import datetime, timezone, timedelta, time
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
 
 from app.core.config import settings
-from app.detectors.base import SimulationClock
-from app.detectors.mock_video import MockVideoDetector
-from app.detectors.mock_audio import MockAudioDetector
 from app.detectors.access_rules import AccessRulesEngine
+from app.detectors.base import SimulationClock
+from app.detectors.mock_audio import MockAudioDetector
+from app.detectors.mock_video import MockVideoDetector
 from app.fusion.corroboration import FusionEngine
-from app.models.signal import Signal, AccessEvent
-from app.models.incident import Incident, Feedback, ThresholdHistory
+from app.models.incident import Feedback, Incident, ThresholdHistory
 from app.models.rules import RuleDocument
+from app.models.signal import AccessEvent, Signal
 from app.repositories.repos import AuditRepository
 
 logger = logging.getLogger("rakshakai.scenario_runner")
@@ -161,7 +161,11 @@ class ScenarioRunner:
 
         # Run all generators concurrently
         tasks = [replay_access_logs()] + video_tasks + audio_tasks
-        await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                logger.error(f"Task error in scenario simulation: {r}", exc_info=r)
+                raise r
 
         return {
             "scenario_id": scenario_data.get("id"),
@@ -205,4 +209,6 @@ class ScenarioRunner:
             "deleted_signals": deleted_signals.deleted_count if deleted_signals else 0,
             "deleted_incidents": deleted_incidents.deleted_count if deleted_incidents else 0,
             "deleted_access_events": deleted_access.deleted_count if deleted_access else 0,
+            "deleted_feedback": deleted_feedback.deleted_count if deleted_feedback else 0,
+            "deleted_threshold_history": deleted_history.deleted_count if deleted_history else 0,
         }

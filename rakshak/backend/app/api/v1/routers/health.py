@@ -3,7 +3,9 @@ Health router (/api/v1/health).
 Kubernetes-ready liveness and readiness probe endpoints.
 """
 from datetime import datetime, timezone
-from fastapi import APIRouter, status, Response
+
+from fastapi import APIRouter, Response, status
+
 from app.db.mongo import ping_db
 from app.jobs.scheduler import scheduler
 

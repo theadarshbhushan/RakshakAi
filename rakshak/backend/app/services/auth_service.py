@@ -3,32 +3,41 @@ Authentication and Identity service for RakshakAI multi-tenant platform.
 Implements Argon2id verification, account lockout protection, JWT access tokens,
 refresh token family rotation, and reuse attack detection.
 """
-from datetime import datetime, timedelta, timezone
+import logging
 import re
 import uuid
-import logging
-from typing import Tuple, Optional, Dict, Any
-from beanie import PydanticObjectId
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Tuple
+
 import yaml
+from beanie import PydanticObjectId
 
 from app.core.config import settings
+from app.core.errors import ConflictError, UnauthorizedError
 from app.core.security import (
-    validate_password_strength,
-    get_password_hash,
-    verify_password,
     create_access_token,
     generate_opaque_token,
+    get_password_hash,
     hash_token,
+    validate_password_strength,
+    verify_password,
 )
-from app.core.errors import UnauthorizedError, ConflictError, NotFoundError, AppError
 from app.models.organization import Organization, Site
-from app.models.user import User, RefreshSession, PasswordResetToken, utc_now
 from app.models.rules import RuleDocument
-from app.models.zone import Zone, Camera
+from app.models.user import RefreshSession, User, utc_now
+from app.models.zone import Camera, Zone
 from app.repositories.repos import AuditRepository
 from app.schemas.auth import UserSummaryResponse
 
 logger = logging.getLogger("rakshakai.services.auth")
+
+
+def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def slugify(text: str) -> str:
@@ -216,8 +225,9 @@ class AuthService:
 
         # Check account lockout
         now = utc_now()
-        if user.locked_until and user.locked_until > now:
-            remaining_mins = int((user.locked_until - now).total_seconds() / 60) + 1
+        locked_until = ensure_utc(user.locked_until)
+        if locked_until and locked_until > now:
+            remaining_mins = int((locked_until - now).total_seconds() / 60) + 1
             raise UnauthorizedError(
                 f"Account is temporarily locked due to too many failed attempts. Try again in {remaining_mins} minutes.",
                 code="AUTH_ACCOUNT_LOCKED",
@@ -318,9 +328,10 @@ class AuthService:
 
         audit_repo = AuditRepository(session.org_id)
         now = utc_now()
+        expires_at = ensure_utc(session.expires_at)
 
-        # Reuse Detection: If already revoked or replaced, revoke entire family!
-        if session.revoked_at is not None or session.expires_at < now:
+        # Reuse Detection: If already revoked or expired, revoke entire family!
+        if session.revoked_at is not None or (expires_at and expires_at < now):
             logger.warning(f"Refresh token reuse detected for family {session.family_id}!")
             await RefreshSession.find({"family_id": session.family_id}).update(
                 {"$set": {"revoked_at": now}}
@@ -355,7 +366,6 @@ class AuthService:
         )
         await new_session.insert()
 
-        # Retrieve user to check status and current token_version
         user = await User.get(PydanticObjectId(session.user_id))
         if not user or not user.is_active or user.deleted_at is not None:
             raise UnauthorizedError("User is no longer active", code="AUTH_USER_DISABLED")

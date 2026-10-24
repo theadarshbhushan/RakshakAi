@@ -2,8 +2,10 @@
 Rules router (/api/v1/rules).
 Tenant-scoped versioned rules management (curfew, zone permissions, thresholds, windows).
 """
-from typing import Dict, Any
-from fastapi import APIRouter, Depends, Body
+from typing import Any, Dict
+
+from fastapi import APIRouter, Body, Depends
+
 from app.core.deps import get_current_user, require_permission
 from app.core.errors import NotFoundError
 from app.models.rules import RuleDocument, utc_now

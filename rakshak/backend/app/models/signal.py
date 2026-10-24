@@ -5,9 +5,10 @@ Raw card_id is never stored; only salted SHA-256 pseudo_id is stored in AccessEv
 """
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
-from pydantic import Field
+
 from beanie import Document
-from pymongo import IndexModel, ASCENDING, DESCENDING
+from pydantic import Field
+from pymongo import ASCENDING, DESCENDING, IndexModel
 
 
 def utc_now() -> datetime:

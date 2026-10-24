@@ -1,23 +1,25 @@
 """
 Invitations router (/api/v1/invitations).
 Issue team invitations and public invitation acceptance.
+TODO [STABILIZATION]: Router disabled and unmounted in main app during stabilization.
 """
 from typing import List
-from fastapi import APIRouter, Depends, status
+
 from beanie import PydanticObjectId
+from fastapi import APIRouter, Depends, status
 
 from app.core.config import settings
 from app.core.deps import get_current_user, require_permission
-from app.core.logging import logger
 from app.core.errors import NotFoundError
-from app.models.user import User, Invitation
-from app.services.org_service import OrgService
+from app.core.logging import logger
+from app.models.user import Invitation, User
+from app.schemas.auth import UserSummaryResponse
 from app.schemas.organization import (
-    InvitationCreateRequest,
     InvitationAcceptRequest,
+    InvitationCreateRequest,
     InvitationResponse,
 )
-from app.schemas.auth import UserSummaryResponse
+from app.services.org_service import OrgService
 
 router = APIRouter(prefix="/invitations", tags=["Invitations"])
 

@@ -1,16 +1,17 @@
 """
 FastAPI dependencies for authentication, multi-tenancy, RBAC, and machine API keys.
 """
-from typing import Optional, Dict, Any, List
-from fastapi import Depends, Header, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from beanie import PydanticObjectId
+from typing import Any, Dict, Optional
 
+from beanie import PydanticObjectId
+from fastapi import Depends, Header
+from fastapi.security import OAuth2PasswordBearer
+
+from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
+from app.core.permissions import has_permission
 from app.core.security import decode_access_token, hash_token
-from app.core.permissions import has_permission, get_permissions_for_role
-from app.core.errors import UnauthorizedError, ForbiddenError, NotFoundError
-from app.models.user import User, ApiKey, utc_now
 from app.models.organization import Organization
+from app.models.user import ApiKey, User, utc_now
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 

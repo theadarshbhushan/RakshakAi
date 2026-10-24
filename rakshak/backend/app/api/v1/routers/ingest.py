@@ -2,14 +2,16 @@
 Ingest router (/api/v1/ingest).
 Ingests batches of real-time signals from edge device cameras and microphones.
 Authenticates via machine API key (X-API-Key) or user bearer JWT with 'signals:write' permission.
+TODO [STABILIZATION]: Router disabled and unmounted in main app during stabilization.
 """
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, status
 
 from app.core.deps import get_ingest_principal
-from app.models.signal import Signal
-from app.models.rules import RuleDocument
 from app.fusion.corroboration import FusionEngine
+from app.models.rules import RuleDocument
+from app.models.signal import Signal
 from app.schemas.domain import SignalCreateRequest
 
 router = APIRouter(prefix="/ingest", tags=["Ingest"])

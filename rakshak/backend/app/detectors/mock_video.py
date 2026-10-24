@@ -5,12 +5,13 @@ Emits Signal models with timestamps synchronized to the simulation clock.
 """
 import asyncio
 import logging
-from typing import Callable, Awaitable, List, Dict, Any, Optional
+from datetime import timedelta
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from app.models import Signal
 from app.detectors.base import BaseDetector, SimulationClock
+from app.models.signal import Signal
 
-logger = logging.getLogger("rakshak.detectors.mock_video")
+logger = logging.getLogger("rakshakai.detectors.mock_video")
 
 
 class MockVideoDetector(BaseDetector):
@@ -34,20 +35,12 @@ class MockVideoDetector(BaseDetector):
                 break
 
             offset_s = float(item.get("sim_offset_s", 0.0))
-            event_sim_time = sim_clock.start_sim_time + asyncio.get_event_loop().time() # wait, use sim_clock
-            # Use sim_clock sleep until target offset
-            target_time = sim_clock.start_sim_time + (item.get("sim_offset_delta") or asyncio.to_thread)
-            # Better:
-            target_sim_time = sim_clock.start_sim_time + asyncio.get_event_loop() if False else None
-            # Let's calculate target_sim_time from sim_clock.start_sim_time + offset_s
-            from datetime import timedelta
             target_sim_time = sim_clock.start_sim_time + timedelta(seconds=offset_s)
             await sim_clock.sleep_until(target_sim_time)
 
             if not self.running or sim_clock.is_stopped:
                 break
 
-            # Create Signal
             kind = item.get("kind", "zone_intrusion")
             score = float(item.get("score", 0.8))
             threshold = float(item.get("threshold", 0.5))
@@ -56,6 +49,7 @@ class MockVideoDetector(BaseDetector):
             evidence_path = item.get("evidence_path")
 
             signal = Signal(
+                org_id="",  # Injected by runner
                 ts=sim_clock.now(),
                 modality="video",
                 kind=kind,
@@ -67,6 +61,7 @@ class MockVideoDetector(BaseDetector):
                 suppressed=False,
                 suppress_reason=None,
                 evidence_path=evidence_path,
+                source="mock_video",
             )
 
             logger.info(f"MockVideoDetector emitting {kind} signal for zone '{zone_id}' at sim time {signal.ts.strftime('%H:%M:%S')}")

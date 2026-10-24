@@ -4,14 +4,14 @@ Fuses Video, Audio, and Access signals within temporal and spatial adjacency win
 Calculates Bayesian composite confidence score, determines severity, and generates
 human-readable explanation narratives detailing all corroborating and suppressed signals.
 """
-from datetime import datetime, timedelta, timezone
-import math
 import logging
-from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from beanie import PydanticObjectId
-from app.models.signal import Signal
+
 from app.models.incident import Incident
+from app.models.signal import Signal
 from app.models.zone import Zone
 from app.realtime.ws import ws_hub
 
@@ -22,6 +22,14 @@ DEFAULT_WEIGHTS = {
     "audio": 0.8,
     "access": 0.7,
 }
+
+
+def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 class FusionEngine:
@@ -75,17 +83,18 @@ class FusionEngine:
         """
         Generate explainable narrative detailing all corroborating and suppressed signals.
         """
-        sorted_signals = sorted(signals, key=lambda s: s.ts)
+        sorted_signals = sorted(signals, key=lambda s: ensure_utc(s.ts))
         narrative_parts: List[str] = []
         base_time: Optional[datetime] = None
 
         for s in sorted_signals:
-            t_str = s.ts.strftime("%H:%M:%S")
+            s_ts = ensure_utc(s.ts)
+            t_str = s_ts.strftime("%H:%M:%S")
             diff_text = ""
             if base_time is None:
-                base_time = s.ts
+                base_time = s_ts
             else:
-                diff_s = int(abs((s.ts - base_time).total_seconds()))
+                diff_s = int(abs((s_ts - base_time).total_seconds()))
                 diff_text = f" {diff_s}s later"
 
             if s.kind == "zone_intrusion":
@@ -123,19 +132,15 @@ class FusionEngine:
                 )
 
         # Query suppressed signals in the same zone around this window
-        suppressed_signals = await Signal.find({
-            "org_id": self.org_id,
-            "zone_id": incident.zone_id,
-            "suppressed": True,
-            "ts": {
-                "$gte": incident.created_ts - timedelta(seconds=self.fusion_window_s),
-                "$lte": incident.updated_ts + timedelta(seconds=self.fusion_window_s),
-            },
-        }).to_list()
+        suppressed_signals = await Signal.find(
+            Signal.org_id == self.org_id,
+            Signal.zone_id == incident.zone_id,
+            Signal.suppressed == True,
+        ).to_list()
 
         suppressed_parts = []
         for sup in suppressed_signals:
-            sup_t = sup.ts.strftime("%H:%M:%S")
+            sup_t = ensure_utc(sup.ts).strftime("%H:%M:%S")
             reason = sup.suppress_reason or "suppressed by filter"
             suppressed_parts.append(f"{sup.kind} at {sup_t} ({reason})")
 
@@ -183,24 +188,38 @@ class FusionEngine:
         if zone_doc and zone_doc.adjacent_zone_ids:
             candidate_zones.extend(zone_doc.adjacent_zone_ids)
 
-        since_ts = signal.ts - timedelta(seconds=self.fusion_window_s)
+        sig_utc = ensure_utc(signal.ts)
 
-        # Look for open incident in matching zones
-        open_incident = await Incident.find_one({
-            "org_id": self.org_id,
-            "status": {"$in": ["new", "acknowledged", "investigating"]},
-            "zone_id": {"$in": candidate_zones},
-            "updated_ts": {"$gte": since_ts},
-        })
+        # Look for open incidents in the organization
+        open_incidents = await Incident.find(
+            Incident.org_id == self.org_id,
+            Incident.status != "confirmed",
+            Incident.status != "false_alarm",
+        ).to_list()
+
+        open_incident = None
+        for inc in open_incidents:
+            inc_updated = ensure_utc(inc.updated_ts)
+            diff_s = abs((sig_utc - inc_updated).total_seconds())
+            if diff_s <= self.fusion_window_s:
+                # Same zone or adjacent zone, or building access corroboration
+                is_zone_match = (inc.zone_id in candidate_zones) or (signal.zone_id == inc.zone_id)
+                is_access_attach = (signal.modality == "access" or inc.zone_id in candidate_zones or signal.zone_id in candidate_zones)
+                if is_zone_match or is_access_attach:
+                    open_incident = inc
+                    break
 
         if open_incident:
             is_new = False
             incident = open_incident
+            # Prefer restricted/primary zone for the incident zone display
+            if zone_doc and zone_doc.type in ("restricted", "entry") and incident.zone_id != signal.zone_id:
+                incident.zone_id = signal.zone_id
             if str(signal.id) not in incident.signal_ids:
                 incident.signal_ids.append(str(signal.id))
             if signal.modality not in incident.modalities:
                 incident.modalities.append(signal.modality)
-            if signal.ts > incident.updated_ts:
+            if sig_utc > ensure_utc(incident.updated_ts):
                 incident.updated_ts = signal.ts
         else:
             is_new = True
@@ -221,8 +240,14 @@ class FusionEngine:
         # Fetch all contributing signals
         contributing_signals = [signal]
         if not is_new and incident.signal_ids:
-            obj_ids = [PydanticObjectId(sid) for sid in incident.signal_ids if len(sid) == 24]
-            fetched = await Signal.find({"_id": {"$in": obj_ids}}).to_list()
+            fetched = []
+            for sid in incident.signal_ids:
+                if sid == str(signal.id):
+                    fetched.append(signal)
+                else:
+                    doc = await Signal.get(PydanticObjectId(sid))
+                    if doc:
+                        fetched.append(doc)
             if fetched:
                 contributing_signals = fetched
 
