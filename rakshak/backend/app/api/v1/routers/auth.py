@@ -8,6 +8,7 @@ from typing import List
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.config import settings
 from app.core.deps import get_current_user
@@ -114,6 +115,47 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         user=user_summary,
         refresh_token=dev_refresh,
     )
+
+
+@router.post("/token", tags=["Swagger"], summary="OAuth2 password form login for Swagger UI Authorize")
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login_for_swagger_token(
+    request: Request,
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+):
+    """
+    OAuth2 compatible form data login endpoint for Swagger UI Authorize dialog.
+    Accepts application/x-www-form-urlencoded credentials (username = email, password).
+    Returns RFC 6749 compliant {"access_token": "...", "token_type": "bearer"}.
+    Applies the same Argon2id verification, brute-force lockout, rate limiting, and audit logging as /login.
+    """
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("User-Agent")
+    request_id = getattr(request.state, "request_id", None)
+
+    access_token, raw_refresh, _ = await AuthService.login(
+        email=form_data.username,
+        password=form_data.password,
+        ip=client_ip,
+        user_agent=user_agent,
+        request_id=request_id,
+    )
+
+    response.set_cookie(
+        key="rakshak_refresh",
+        value=raw_refresh,
+        httponly=True,
+        secure=(settings.ENV == "prod"),
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=settings.REFRESH_TOKEN_TTL_DAYS * 86400,
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 
 @router.post("/refresh", response_model=TokenResponse)

@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from beanie import PydanticObjectId
 from fastapi import Depends, Header
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 
 from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.permissions import has_permission
@@ -13,18 +13,24 @@ from app.core.security import decode_access_token, hash_token
 from app.models.organization import Organization
 from app.models.user import ApiKey, User, utc_now
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token", auto_error=False)
+http_bearer = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> User:
+async def get_current_user(
+    token: Optional[str] = Depends(oauth2_scheme),
+    bearer: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
+) -> User:
     """
     Validate bearer JWT token and return active User document.
+    Supports either OAuth2 password flow token or HTTPBearer authorization header.
     Enforces token_version check, active status, and tenant binding.
     """
-    if not token:
+    auth_token = token or (bearer.credentials if bearer else None)
+    if not auth_token:
         raise UnauthorizedError("Missing authentication token", code="AUTH_MISSING_TOKEN")
 
-    payload = decode_access_token(token)
+    payload = decode_access_token(auth_token)
     user_id = payload.get("sub")
     org_id = payload.get("org_id")
     token_version = payload.get("tv")
@@ -120,6 +126,7 @@ async def get_api_key_principal(x_api_key: Optional[str] = Header(None, alias="X
 async def get_ingest_principal(
     api_key_principal: Optional[Dict[str, Any]] = Depends(get_api_key_principal),
     token: Optional[str] = Depends(oauth2_scheme),
+    bearer: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
 ) -> Dict[str, Any]:
     """
     Principal dependency for signal ingestion.
@@ -130,8 +137,9 @@ async def get_ingest_principal(
             raise ForbiddenError("API key lacks required 'signals:write' scope.")
         return api_key_principal
 
-    if token:
-        user = await get_current_user(token)
+    auth_token = token or (bearer.credentials if bearer else None)
+    if auth_token:
+        user = await get_current_user(token=token, bearer=bearer)
         if not has_permission(user.role, "signals:write"):
             raise ForbiddenError("User role lacks required 'signals:write' permission.")
         return {
@@ -143,3 +151,4 @@ async def get_ingest_principal(
         }
 
     raise UnauthorizedError("Authentication required (X-API-Key or Bearer token)", code="AUTH_REQUIRED")
+

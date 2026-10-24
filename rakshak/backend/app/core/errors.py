@@ -98,6 +98,19 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     )
 
 
+def _clean_error_details(obj: Any) -> Any:
+    """Recursively convert bytes and non-serializable objects in validation errors to safe JSON primitives."""
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="replace")
+    elif isinstance(obj, dict):
+        return {str(k): _clean_error_details(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_clean_error_details(item) for item in obj]
+    elif not isinstance(obj, (int, float, bool, type(None), str)):
+        return str(obj)
+    return obj
+
+
 async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "")
     return JSONResponse(
@@ -105,12 +118,13 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
         content={
             "error": {
                 "code": "VALIDATION_ERROR",
-                "message": "Invalid request parameters",
+                "message": "Invalid request parameters or payload",
                 "request_id": request_id,
-                "details": {"errors": exc.errors()},
+                "details": {"errors": _clean_error_details(exc.errors())},
             }
         },
     )
+
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:

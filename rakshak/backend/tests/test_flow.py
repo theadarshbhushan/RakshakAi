@@ -303,3 +303,56 @@ async def test_docs_security_headers_and_csp(client: AsyncClient):
     assert live_csp == "default-src 'self'"
     assert live_res.headers.get("X-Frame-Options") == "DENY"
 
+
+# =============================================================================
+# 11. OAuth2 Form /auth/token and Malformed Input Error Handling (Never 500)
+# =============================================================================
+@pytest.mark.asyncio
+async def test_auth_token_endpoint_and_malformed_input_returns_4xx(client: AsyncClient):
+    # 1. Valid form login to /api/v1/auth/token (Swagger OAuth2PasswordRequestForm flow)
+    token_res = await client.post(
+        "/api/v1/auth/token",
+        data={"username": "owner@sunrise.demo", "password": "Owner@12345"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert token_res.status_code == 200
+    token_data = token_res.json()
+    assert "access_token" in token_data
+    assert token_data["token_type"] == "bearer"
+    access_token = token_data["access_token"]
+
+    # 2. Verify token works via HTTPBearer directly on protected route
+    me_res = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {access_token}"})
+    assert me_res.status_code == 200
+    assert me_res.json()["email"] == "owner@sunrise.demo"
+
+    # 3. Invalid credentials to /api/v1/auth/token returns 401
+    bad_token = await client.post(
+        "/api/v1/auth/token",
+        data={"username": "owner@sunrise.demo", "password": "WrongPassword99!"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert bad_token.status_code == 401
+    assert "error" in bad_token.json()
+
+    # 4. Form data posted to JSON-expecting /api/v1/auth/login returns 422 (never 500)
+    wrong_type_res = await client.post(
+        "/api/v1/auth/login",
+        content=b"username=owner%40sunrise.demo&password=Owner%4012345",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert 400 <= wrong_type_res.status_code < 500
+    assert wrong_type_res.status_code == 422
+    assert wrong_type_res.json()["error"]["code"] == "VALIDATION_ERROR"
+
+    # 5. Malformed binary data to /login returns 422 (never 500)
+    malformed_res = await client.post(
+        "/api/v1/auth/login",
+        content=b"\x00\xff\xfe{malformed}",
+        headers={"Content-Type": "application/json"},
+    )
+    assert 400 <= malformed_res.status_code < 500
+    assert malformed_res.status_code == 422
+    assert malformed_res.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
