@@ -8,7 +8,7 @@ This document lists all external, synthetic, and benchmark datasets utilized in 
 
 - **Source / Provider**: [Simuletic](https://simuletic.com/)
 - **Local Directory**: `data/raw_datasets/cctv_aggressive_poses/Aggressive_Poses_Dataset/`
-- **Configuration**: [`ml/configs/cctv_pose.yaml`](file:///d:/RakshakAi/rakshak/ml/configs/cctv_pose.yaml)
+- **Configuration**: [`ml/configs/cctv_pose.yaml`](file:///d:/RakshakAi/ml/configs/cctv_pose.yaml)
 - **Modality**: High-resolution synthetic CCTV image frames with 2D pose annotations
 - **Dataset Size**:
   - **Images**: 103 synthetic CCTV frames (hallway, room, and corridor angles)
@@ -26,8 +26,8 @@ This document lists all external, synthetic, and benchmark datasets utilized in 
   - **Keypoint Pose mAP@50**: **99.50%**
   - **Keypoint Pose mAP@50-95**: **80.35%**
   - **Inference Latency**: **~63.3 ms / frame on CPU** (~15.8 FPS)
-  - Visual samples: [`ml/eval/results/pose_examples/`](file:///d:/RakshakAi/rakshak/ml/eval/results/pose_examples/)
-  - Full metrics artifact: [`ml/eval/results/pose_benchmark.json`](file:///d:/RakshakAi/rakshak/ml/eval/results/pose_benchmark.json)
+  - Visual samples: [`ml/eval/results/pose_examples/`](file:///d:/RakshakAi/ml/eval/results/pose_examples/)
+  - Full metrics artifact: [`ml/eval/results/pose_benchmark.json`](file:///d:/RakshakAi/ml/eval/results/pose_benchmark.json)
 
 ---
 
@@ -46,7 +46,7 @@ This document lists all external, synthetic, and benchmark datasets utilized in 
 
 ## 3. RakshakAI Synthetic Multi-Modal Scenarios & Camera Feeds
 
-- **Generator Module**: [`backend/app/detectors/synthetic_media.py`](file:///d:/RakshakAi/rakshak/backend/app/detectors/synthetic_media.py)
+- **Generator Module**: [`backend/app/detectors/synthetic_media.py`](file:///d:/RakshakAi/backend/app/detectors/synthetic_media.py)
 - **Local Directories**:
   - `data/videos/intrusion/`: Restricted roof/terrace boundary intrusion clips
   - `data/videos/tailgating/`: Turnstile and door line crossing sequences

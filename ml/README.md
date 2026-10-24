@@ -2,14 +2,14 @@
 
 This package contains all offline machine learning pipelines, dataset calibration, offline benchmark evaluations, model configuration profiles, and trained weights for the **RakshakAI** campus and hostel safety intelligence system.
 
-Live detector inference code is maintained in [`backend/app/detectors/`](file:///d:/RakshakAi/rakshak/backend/app/detectors/) and imported directly by both the FastAPI backend and this ML package, ensuring **zero code duplication**.
+Live detector inference code is maintained in [`backend/app/detectors/`](file:///d:/RakshakAi/backend/app/detectors/) and imported directly by both the FastAPI backend and this ML package, ensuring **zero code duplication**.
 
 ---
 
 ## 1. Directory Structure
 
 ```
-rakshak/ml/
+ml/
 ├── __init__.py
 ├── README.md                  # Complete model and evaluation documentation
 ├── configs/                   # Model and heuristic parameter configurations

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-24T18:28:41.018163+00:00",
+  "timestamp": "2026-10-24T19:31:19.514241+00:00",
   "tasks": {
     "audio_distress": {
       "status": "evaluated",
@@ -106,7 +106,7 @@
           }
         }
       },
-      "latency_per_sec_media": 0.0467,
+      "latency_per_sec_media": 0.0306,
       "samples": [
         {
           "file": "raw_datasets/ESC-50-master/audio/1-20133-A-39.wav",
@@ -256,7 +256,7 @@
           "file": "raw_datasets/ESC-50-master/audio/1-22694-A-20.wav",
           "filename": "1-22694-A-20.wav",
           "task": "audio_distress",
-          "score": 0.937,
+          "score": 0.963,
           "predicted": 1,
           "expected": 1,
           "result": "TP",
@@ -594,7 +594,7 @@
           "negatives": 5
         }
       },
-      "latency_per_sec_media": 1.5255,
+      "latency_per_sec_media": 0.4266,
       "samples": [
         {
           "file": "raw_datasets/Real Life Violence Dataset/Violence/V_1.mp4",
@@ -875,7 +875,7 @@
           }
         }
       },
-      "latency_per_sec_media": 0.0176,
+      "latency_per_sec_media": 0.0195,
       "samples": [
         {
           "file": "audio/distress/distress_01.wav",
@@ -893,7 +893,7 @@
           "file": "audio/hard_negative/cheering_01.wav",
           "filename": "cheering_01.wav",
           "task": "audio_distress",
-          "score": 0.581,
+          "score": 0.638,
           "predicted": 1,
           "expected": 0,
           "result": "FP",
@@ -938,7 +938,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.6094,
+      "latency_per_sec_media": 0.2643,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
@@ -989,7 +989,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.6327,
+      "latency_per_sec_media": 0.2695,
       "samples": [
         {
           "file": "videos/tailgating/tailgate_01.mp4",
@@ -1040,7 +1040,7 @@
           "negatives": 1
         }
       },
-      "latency_per_sec_media": 0.6303,
+      "latency_per_sec_media": 0.2748,
       "samples": [
         {
           "file": "videos/intrusion/intrusion_01.mp4",
@@ -1340,7 +1340,7 @@
       "file": "raw_datasets/ESC-50-master/audio/1-22694-A-20.wav",
       "filename": "1-22694-A-20.wav",
       "task": "audio_distress",
-      "score": 0.937,
+      "score": 0.963,
       "predicted": 1,
       "expected": 1,
       "result": "TP",

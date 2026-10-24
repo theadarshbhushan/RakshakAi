@@ -1,6 +1,11 @@
+# Environment and Secrets
 .env
 .env.*
 !.env.example
+.venv/
+.venv
+
+# Python artifacts
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,11 +32,11 @@ wheels/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
-.venv
 
 # ML weights and datasets
 *.pt
 *.joblib
+models/
 /models/
 ml/models/*
 !ml/models/.gitkeep
@@ -45,7 +50,13 @@ data/evidence/public/*
 data/evidence/restricted/*
 !data/evidence/public/.gitkeep
 !data/evidence/restricted/.gitkeep
+data/evidence/
 *.mp4
 *.avi
 *.wav
 *.mp3
+
+# Frontend & Node
+node_modules/
+frontend/dist/
+dist/
