@@ -20,7 +20,7 @@ import { SeverityDot } from '@/components/ui/SeverityDot'
 import { Countdown } from '@/components/ui/Countdown'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Incident } from '@/api/types'
-import { cleanExplanation } from '@/utils/incidentHelpers'
+import { cleanExplanation, formatZoneDisplayName } from '@/utils/incidentHelpers'
 
 export const IncidentQueuePage: React.FC = () => {
   const navigate = useNavigate()
@@ -247,7 +247,7 @@ export const IncidentQueuePage: React.FC = () => {
 
                       {/* Zone */}
                       <td className="py-3.5 px-4 font-medium text-content-primary whitespace-nowrap">
-                        {inc.zone_id ? inc.zone_id.replace(/_/g, ' ') : 'Zone'}
+                        {formatZoneDisplayName(inc.zone_id)}
                       </td>
 
                       {/* Sensor Modality Icons */}
@@ -306,7 +306,7 @@ export const IncidentQueuePage: React.FC = () => {
                       {/* Action */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <Link
-                          to={`/incidents/${inc.id}`}
+                          to={`/app/incidents/${inc.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:text-primary-hover"
                         >

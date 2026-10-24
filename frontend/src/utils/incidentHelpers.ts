@@ -22,7 +22,63 @@ export function getLocalGreeting(date: Date = new Date()): string {
 }
 
 /**
- * Format a zone ID into a natural-sounding English noun phrase.
+ * Extracts a person's first name, or defaults to the role if there is no real name.
+ * Handles generic accounts like "Hostel Owner" -> "Warden" or "Chief Warden / Owner" -> "Warden".
+ */
+export function getGreetingName(user?: { full_name?: string | null; role?: string | null } | null): string {
+  const roleTitle = user?.role
+    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    : 'Warden'
+  const fallbackRole = user?.role === 'owner' ? 'Warden' : roleTitle
+
+  if (!user || !user.full_name) {
+    return fallbackRole
+  }
+
+  const rawName = user.full_name.trim()
+
+  // Words that indicate an organizational title or role rather than a person's first name
+  const genericTitles = [
+    'hostel',
+    'chief',
+    'security',
+    'sunrise',
+    'green',
+    'valley',
+    'admin',
+    'administrator',
+    'owner',
+    'warden',
+    'guard',
+    'auditor',
+    'staff',
+    'user',
+    'system',
+  ]
+
+  const firstWord = rawName.split(/[\s/]+/)[0]
+
+  if (genericTitles.includes(firstWord.toLowerCase())) {
+    return fallbackRole
+  }
+
+  return firstWord
+}
+
+/**
+ * Map of zone IDs to human-readable names.
+ */
+export const ZONE_NAMES: Record<string, string> = {
+  terrace: 'Terrace Rooftop',
+  block_b_entry: 'Block B Entry',
+  corridor_2f: '2nd Floor Corridor',
+  common_room: 'Common Room',
+  mess_hall: 'Mess Hall & Dining',
+  ground_floor: 'Ground Floor Lobby',
+}
+
+/**
+ * Formats a zone ID into a natural-sounding English noun phrase.
  */
 export function formatZoneNoun(zoneId?: string): string {
   if (!zoneId) return 'the campus'
@@ -32,6 +88,49 @@ export function formatZoneNoun(zoneId?: string): string {
   if (z === 'corridor_2f') return 'the 2nd floor corridor'
   if (z === 'common_room') return 'the common room'
   return zoneId.replace(/_/g, ' ')
+}
+
+/**
+ * Formats a zone ID into a clean display title (e.g. "terrace" -> "Terrace Rooftop").
+ */
+export function formatZoneDisplayName(zoneId?: string | null): string {
+  if (!zoneId) return 'Terrace Rooftop'
+  const cleanId = zoneId.toLowerCase().trim()
+  if (ZONE_NAMES[cleanId]) {
+    return ZONE_NAMES[cleanId]
+  }
+  return zoneId
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/**
+ * Map of signal kinds to human-readable names.
+ */
+export const SIGNAL_KIND_NAMES: Record<string, string> = {
+  fight: 'Possible fight',
+  distress_audio: 'Distress audio',
+  zone_intrusion: 'Zone intrusion',
+  loitering: 'Unusual loitering',
+  tailgating: 'Tailgating event',
+  student_sos: 'Student SOS',
+  restricted_access: 'Restricted access entry',
+  camera_tamper: 'Camera tamper / blind spot',
+  curfew_violation: 'Curfew violation',
+}
+
+/**
+ * Formats a signal kind into a clean human name (e.g. "fight" -> "Possible fight").
+ */
+export function formatSignalKindName(kind?: string | null): string {
+  if (!kind) return 'Sensor signal'
+  const clean = kind.toLowerCase().trim()
+  if (SIGNAL_KIND_NAMES[clean]) {
+    return SIGNAL_KIND_NAMES[clean]
+  }
+  return clean
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 /**

@@ -427,7 +427,7 @@ export const AnalyzeFootagePage: React.FC = () => {
                     {job.incident_ids && job.incident_ids.length > 0 && (
                       <div className="mt-2 pt-1 border-t border-border-divider/60 flex items-center justify-between">
                         <Link
-                          to={`/incidents/${job.incident_ids[0]}`}
+                          to={`/app/incidents/${job.incident_ids[0]}`}
                           onClick={(e) => e.stopPropagation()}
                           className="text-[12px] font-medium text-primary hover:underline flex items-center gap-1"
                         >

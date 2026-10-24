@@ -169,7 +169,7 @@ export const CameraTile: React.FC<CameraTileProps> = ({
             </div>
 
             <span className="text-[11px] font-mono text-[#B9B7B1] mt-1">
-              Live stream standby
+              No live feed right now
             </span>
           </div>
         )}

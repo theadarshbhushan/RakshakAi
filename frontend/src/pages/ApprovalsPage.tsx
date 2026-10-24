@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { toast } from 'sonner'
+import { formatZoneDisplayName } from '@/utils/incidentHelpers'
 
 export const ApprovalsPage: React.FC = () => {
   const queryClient = useQueryClient()
@@ -157,11 +158,11 @@ export const ApprovalsPage: React.FC = () => {
 
                     <div className="flex items-center gap-2 text-[13px] text-content-secondary">
                       <span className="font-medium text-content-primary">
-                        Zone: {req.zone_id ? req.zone_id.replace(/_/g, ' ') : 'Terrace Rooftop'}
+                        Zone: {formatZoneDisplayName(req.zone_id)}
                       </span>
                       {req.incident_id && (
                         <Link
-                          to={`/incidents/${req.incident_id}`}
+                          to={`/app/incidents/${req.incident_id}`}
                           className="text-primary hover:underline font-mono text-[12px] flex items-center gap-0.5"
                         >
                           <span>(Incident #{req.incident_id.slice(-6)})</span>

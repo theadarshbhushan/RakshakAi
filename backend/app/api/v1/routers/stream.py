@@ -31,17 +31,23 @@ from app.repositories.repos import AuditRepository
 router = APIRouter(prefix="/stream", tags=["Live Stream"])
 
 
-def get_placeholder_frame(text: str = "RakshakAI Feed") -> bytes:
+def get_placeholder_frame(text: str = "No live feed right now") -> bytes:
     """Generate simple fallback JPEG placeholder when camera has not emitted a frame yet."""
     canvas = np.zeros((360, 640, 3), dtype=np.uint8)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.8
+    thickness = 2
+    size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+    x = max(20, (640 - size[0]) // 2)
+    y = max(40, (360 + size[1]) // 2)
     cv2.putText(
         canvas,
         text,
-        (160, 180),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
-        (0, 220, 255),
-        2,
+        (x, y),
+        font,
+        font_scale,
+        (180, 180, 180),
+        thickness,
         cv2.LINE_AA,
     )
     _, jpg = cv2.imencode(".jpg", canvas)
@@ -95,7 +101,7 @@ async def mjpeg_frame_generator(
         frame_bytes = cam_data.get(lookup_mode)
 
         if not frame_bytes:
-            frame_bytes = get_placeholder_frame(f"Waiting for {camera_id}...")
+            frame_bytes = get_placeholder_frame("No live feed right now")
         elif mode == "emergency":
             # Overlay forensic watermark in real-time
             try:

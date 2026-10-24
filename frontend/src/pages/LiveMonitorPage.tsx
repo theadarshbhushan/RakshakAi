@@ -26,7 +26,13 @@ import { Countdown } from '@/components/ui/Countdown'
 import { CameraTile } from '@/components/evidence/CameraTile'
 import { toast } from 'sonner'
 import type { Incident, Signal, Camera } from '@/api/types'
-import { getLocalGreeting, getIncidentPlainTitle } from '@/utils/incidentHelpers'
+import {
+  getLocalGreeting,
+  getGreetingName,
+  getIncidentPlainTitle,
+  formatZoneDisplayName,
+  formatSignalKindName,
+} from '@/utils/incidentHelpers'
 
 export const LiveMonitorPage: React.FC = () => {
   const { user } = useAuthStore()
@@ -155,7 +161,7 @@ export const LiveMonitorPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-[26px] font-bold text-content-primary">
-            {getLocalGreeting()}, {firstName}
+            {getLocalGreeting()}, {getGreetingName(user)}
           </h1>
           <p className="text-[14px] text-content-secondary mt-1">
             Curfew started at 11:00 pm. {urgentIncident ? 'One incident needs a decision.' : 'All zones currently quiet.'}
@@ -177,7 +183,7 @@ export const LiveMonitorPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <SeverityDot severity={urgentIncident.severity} pulse />
               <span className="text-[13px] font-medium text-content-secondary">
-                {urgentIncident.zone_id ? urgentIncident.zone_id.replace(/_/g, ' ') : 'Terrace Rooftop'} · {formatTimeStr(urgentIncident.created_ts)}
+                {formatZoneDisplayName(urgentIncident.zone_id)} · {formatTimeStr(urgentIncident.created_ts)}
               </span>
             </div>
             <h2 className="text-[18px] font-semibold text-content-primary leading-snug">
@@ -314,12 +320,13 @@ export const LiveMonitorPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-content-primary capitalize">
-                          {sig.kind ? sig.kind.replace(/_/g, ' ') : 'Sensor signal'}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[13px] font-medium text-content-primary">
+                          {formatSignalKindName(sig.kind)}
                         </span>
-                        <span className="text-[11px] text-content-muted font-mono">
-                          {sig.zone_id ? sig.zone_id.replace(/_/g, ' ') : 'Zone'}
+                        <span className="text-content-muted text-[12px]">·</span>
+                        <span className="text-[12px] text-content-secondary font-medium">
+                          {formatZoneDisplayName(sig.zone_id)}
                         </span>
                       </div>
 

@@ -46,14 +46,25 @@ export const Countdown: React.FC<CountdownProps> = ({
     return () => clearInterval(timer)
   }, [remaining, onExpire])
 
-  const formatTime = (secs: number) => {
-    if (secs <= 60) return `${secs} s`
+  const renderFormattedTime = (secs: number) => {
+    if (secs <= 60) {
+      return (
+        <>
+          <span className="font-mono">{secs}</span> s
+        </>
+      )
+    }
     const mins = Math.floor(secs / 60)
     const rem = secs % 60
-    return `${mins}m ${rem < 10 ? '0' : ''}${rem}s`
+    return (
+      <>
+        <span className="font-mono">{mins}</span>m{' '}
+        <span className="font-mono">{rem < 10 ? '0' : ''}{rem}</span>s
+      </>
+    )
   }
 
   return (
-    <span className={`font-mono text-critical ${className}`}>{prefix}{formatTime(remaining)}{suffix}</span>
+    <span className={`text-critical ${className}`}>{prefix}{renderFormattedTime(remaining)}{suffix}</span>
   )
 }

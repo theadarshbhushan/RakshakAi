@@ -28,7 +28,7 @@ import {
   Cell,
 } from 'recharts'
 import { api } from '@/api/client'
-import { cleanExplanation, getIncidentPlainTitle } from '@/utils/incidentHelpers'
+import { cleanExplanation, getIncidentPlainTitle, formatZoneDisplayName } from '@/utils/incidentHelpers'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -272,7 +272,7 @@ export const IncidentDetailPage: React.FC = () => {
               <SeverityDot severity={incident.severity} pulse={!isAcknowledged} />
               <span className="text-border-divider">·</span>
               <span className="font-medium">
-                {incident.zone_id ? incident.zone_id.replace(/_/g, ' ') : 'Terrace Rooftop'}
+                {formatZoneDisplayName(incident.zone_id)}
               </span>
               <span className="text-border-divider">·</span>
               <span>{formatTimeStr(incident.created_ts)}</span>

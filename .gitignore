@@ -1,62 +1,70 @@
-# Environment and Secrets
+# ===== Secrets (never commit) =====
 .env
 .env.*
 !.env.example
-.venv/
-.venv
+**/.env
+!**/.env.example
+kaggle.json
+*.pem
+*.key
 
-# Python artifacts
+# ===== Python =====
+.venv/
+venv/
+env/
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
 .pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
 .ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
 
-# ML weights and datasets
-*.pt
-*.joblib
-models/
-/models/
-ml/models/*
-!ml/models/.gitkeep
-yolov8n-pose.pt
-data/raw_datasets/
-data/videos/
-data/audio/
-data/uploads/*
-!data/uploads/.gitkeep
-data/evidence/public/*
-data/evidence/restricted/*
-!data/evidence/public/.gitkeep
-!data/evidence/restricted/.gitkeep
-data/evidence/
-*.mp4
-*.avi
-*.wav
-*.mp3
-
-# Frontend & Node
+# ===== Node / Frontend =====
 node_modules/
 frontend/dist/
-dist/
+frontend/.vite/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Datasets & generated media =====
+data/raw_datasets/
+data/evidence/
+data/uploads/
+data/audio_train/
+data/videos/**/*.mp4
+data/videos/**/*.avi
+data/videos/**/*.mov
+data/videos/**/*.mkv
+data/audio/**/*.wav
+data/audio/**/*.mp3
+data/audio/**/*.flac
+!data/**/README.txt
+!data/**/.gitkeep
+
+# ===== Models & ML outputs =====
+models/
+*.pt
+*.onnx
+*.tflite
+*.h5
+*.joblib
+runs/
+
+# ===== Databases & runtime =====
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== OS & editors =====
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
