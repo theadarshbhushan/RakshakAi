@@ -53,6 +53,8 @@ class Settings(BaseSettings):
 
     MAX_UPLOAD_SIZE_MB: int = Field(default=200, description="Max allowed file upload size in MB")
     SHOW_BOXES: bool = Field(default=True, description="Draw tracked person bounding boxes on visualisations")
+    EVIDENCE_KEY: Optional[str] = Field(default=None, description="64-hex char AES-GCM master key")
+    IDENTITY_REVEAL_SINGLE_APPROVAL: bool = Field(default=False, description="Dev-only single approval for identity reveal")
 
     # Filesystem Paths
     PROJECT_ROOT: Path = PROJECT_ROOT

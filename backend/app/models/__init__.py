@@ -4,7 +4,7 @@ All Beanie Document models for RakshakAI multi-tenant platform.
 from app.models.audit import AuditLog
 from app.models.incident import Feedback, Incident, ThresholdHistory
 from app.models.organization import Organization, Site
-from app.models.privacy import BreakglassGrant
+from app.models.privacy import BreakglassGrant, EmergencyReveal, IdentityRevealRequest
 from app.models.rules import RuleDocument
 from app.models.signal import AccessEvent, Signal
 from app.models.user import (
@@ -34,6 +34,8 @@ ALL_DOCUMENT_MODELS = [
     ThresholdHistory,
     RuleDocument,
     BreakglassGrant,
+    EmergencyReveal,
+    IdentityRevealRequest,
     AuditLog,
     AnalysisJob,
 ]
@@ -56,6 +58,8 @@ __all__ = [
     "ThresholdHistory",
     "RuleDocument",
     "BreakglassGrant",
+    "EmergencyReveal",
+    "IdentityRevealRequest",
     "AuditLog",
     "ALL_DOCUMENT_MODELS",
 ]

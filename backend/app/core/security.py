@@ -113,9 +113,9 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         raise UnauthorizedError(message=f"Invalid token: {exc}", code="AUTH_INVALID_TOKEN")
 
 
-def generate_opaque_token() -> str:
-    """Generate secure 256-bit random URL-safe string for refresh/invitation tokens."""
-    return secrets.token_urlsafe(32)
+def generate_opaque_token(nbytes: int = 32) -> str:
+    """Generate secure random URL-safe string for tokens."""
+    return secrets.token_urlsafe(nbytes)
 
 
 def hash_token(raw_token: str) -> str:

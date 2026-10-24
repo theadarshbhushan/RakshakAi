@@ -99,18 +99,41 @@ class CalibrationOverviewResponse(BaseModel):
 
 # Privacy & Breakglass Schemas
 class BreakglassRequest(BaseModel):
-    incident_id: str
+    incident_id: Optional[str] = None
+    job_id: Optional[str] = None
     reason: str = Field(..., min_length=10, description="Audit justification (min 10 chars)")
 
 
 class BreakglassResponse(BaseModel):
     token: str
     expires_at: datetime
+    incident_id: Optional[str] = None
+    job_id: Optional[str] = None
+
+
+class EmergencyRevealRequest(BaseModel):
     incident_id: str
+    reason: str = Field(..., min_length=5, description="Audit justification (min 5 chars)")
+
+
+class EmergencyRevealReviewRequest(BaseModel):
+    status: str = Field(..., description="justified | not_justified")
+    note: str = Field(..., min_length=1)
+
+
+class IdentityRevealCreateRequest(BaseModel):
+    incident_id: str
+    reason: str = Field(..., min_length=20, description="Audit justification (min 20 chars)")
+
+
+class IdentityRevealDecisionRequest(BaseModel):
+    note: Optional[str] = None
 
 
 class PrivacySettingsRequest(BaseModel):
-    retention_days: int = Field(..., ge=1, le=365)
+    retention_days: Optional[int] = Field(None, ge=1, le=365)
+    retention_days_confirmed: Optional[int] = Field(None, ge=1, le=365)
+    default_evidence_view: Optional[str] = Field(None, description="skeleton | blurred")
 
 
 class PrivacyInventoryResponse(BaseModel):

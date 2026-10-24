@@ -436,12 +436,12 @@ def render_face_blurred_frame(
             fx2 = min(w, int(max(xs) + pad_x))
             fy2 = min(h, int(max(ys) + pad_y))
         else:
-            # Fallback: Blur top 28% of the person's bounding box
+            # Fallback: Blur top 20% of the person's bounding box
             bx1, by1, bx2, by2 = map(int, box)
             fx1 = max(0, bx1)
             fy1 = max(0, by1)
             fx2 = min(w, bx2)
-            fy2 = min(h, by1 + int((by2 - by1) * 0.28))
+            fy2 = min(h, by1 + int((by2 - by1) * 0.20))
 
         if fx2 > fx1 + 4 and fy2 > fy1 + 4:
             roi = blurred_frame[fy1:fy2, fx1:fx2]
@@ -482,7 +482,9 @@ class VideoPoseDetector(BaseDetector):
         """Load camera and zone configuration from Mongo if available, with resilient defaults."""
         # Intelligent fallback for zone_type if not found in db
         zid_lower = zone_id.lower()
-        if "common" in zid_lower or "lounge" in zid_lower or "room" in zid_lower or "hall" in zid_lower:
+        if "perimeter" in zid_lower or "wall" in zid_lower or "fence" in zid_lower:
+            default_zone_type = "perimeter"
+        elif "common" in zid_lower or "lounge" in zid_lower or "room" in zid_lower or "hall" in zid_lower:
             default_zone_type = "common"
         elif "corridor" in zid_lower or "passage" in zid_lower:
             default_zone_type = "corridor"
@@ -592,6 +594,7 @@ class VideoPoseDetector(BaseDetector):
 
         # Load config
         cam_config = await self._load_camera_zone_config(camera_id, zone_id)
+        zone_type = cam_config.get("zone_type", "common")
         door_line_cfg = cam_config.get("door_line")
         poly_norm = cam_config.get("polygon", [])
         threshold_intrusion = float(cam_config.get("threshold_intrusion", 0.50))
@@ -633,6 +636,8 @@ class VideoPoseDetector(BaseDetector):
 
         # Video recording & progress state
         ffmpeg_proc: Optional[subprocess.Popen] = None
+        ffmpeg_proc_blurred: Optional[subprocess.Popen] = None
+        last_after_hours_emit: Dict[int, datetime] = {}
         last_progress_pct = 0
         latest_event_banner: Optional[str] = None
         event_banner_expiry: Optional[datetime] = None
@@ -874,6 +879,13 @@ class VideoPoseDetector(BaseDetector):
                                     sim_time=current_sim_time,
                                 )
 
+                                is_perimeter = (zone_type == "perimeter")
+                                if is_perimeter:
+                                    score = min(1.0, score + 0.2)
+                                    event_tag = f"PERIMETER {score:.2f}"
+                                    person_entry["state"] = "red"
+                                    person_entry["event_name"] = event_tag
+
                                 intrusion_sig = Signal(
                                     org_id="",
                                     ts=current_sim_time,
@@ -885,6 +897,9 @@ class VideoPoseDetector(BaseDetector):
                                     threshold=threshold_intrusion,
                                     details={
                                         "track_id": tid,
+                                        "flagged_track_ids": [tid],
+                                        "subtype": "perimeter_breach" if is_perimeter else None,
+                                        "explained_by_access": False if is_perimeter else None,
                                         "ankle_point": [round(float(test_pt[0]) / frame_w, 3), round(float(test_pt[1]) / frame_h, 3)],
                                         "bounding_box": [round(float(x) / (frame_w if i % 2 == 0 else frame_h), 3) for i, x in enumerate(box)],
                                         "consecutive_frames": consecutive_inside[tid],
@@ -913,11 +928,24 @@ class VideoPoseDetector(BaseDetector):
                         # Transition from negative side to positive side -> "in" direction crossing
                         if side_prev < 0 and side_curr >= 0:
                             door_in_count += 1
+                            is_curfew = is_time_in_curfew(current_sim_time, curfew_start, curfew_end)
                             is_tailgating = (door_in_count > door_swipes_count)
-                            event_tag = "TAILGATING" if is_tailgating else "CROSSING 0.96"
+                            is_unswiped = (door_in_count > 0 and door_swipes_count == 0)
+
+                            if is_unswiped:
+                                event_tag = "UNSWIPED ENTRY"
+                                sig_kind = "unswiped_entry"
+                            elif is_tailgating:
+                                event_tag = "TAILGATING"
+                                sig_kind = "tailgating"
+                            else:
+                                event_tag = "CROSSING 0.96"
+                                sig_kind = "line_crossing"
+
                             active_signals[tid] = (event_tag, current_sim_time + timedelta(seconds=5.0))
-                            person_entry["state"] = "red"
-                            person_entry["event_name"] = event_tag
+                            if is_tailgating or is_unswiped:
+                                person_entry["state"] = "red"
+                                person_entry["event_name"] = event_tag
 
                             evidence_id = f"line_{camera_id}_{tid}_{int(current_sim_time.timestamp())}"
                             ev_rel_path = self._save_evidence(
@@ -936,21 +964,52 @@ class VideoPoseDetector(BaseDetector):
                                 org_id="",
                                 ts=current_sim_time,
                                 modality="video",
-                                kind="line_crossing",
+                                kind=sig_kind,
                                 zone_id=zone_id,
                                 camera_id=camera_id,
-                                score=0.96,
+                                score=0.96 if is_curfew else 0.85,
                                 threshold=0.50,
                                 details={
                                     "track_id": tid,
+                                    "flagged_track_ids": [tid],
                                     "direction": "in",
-                                    "door_id": door_line_cfg.get("door_id", f"door_{zone_id}"),
+                                    "door_id": door_line_cfg.get("door_id", f"door_{zone_id}") if door_line_cfg else f"door_{zone_id}",
                                     "tailgating": is_tailgating,
+                                    "unswiped_entry": is_unswiped,
+                                    "is_curfew": is_curfew,
+                                    "people_count": door_in_count,
+                                    "swipe_count": door_swipes_count,
                                 },
                                 evidence_path=ev_rel_path,
                                 source="video_pose",
                             )
                             await emit_callback(crossing_sig)
+
+                    # (C) After-Hours Mode Check during Curfew
+                    if zone_type in ("corridor", "common", "residential"):
+                        is_curfew = is_time_in_curfew(current_sim_time, curfew_start, curfew_end)
+                        if is_curfew:
+                            last_ah = last_after_hours_emit.get(tid)
+                            if last_ah is None or (current_sim_time - last_ah).total_seconds() > 45.0:
+                                last_after_hours_emit[tid] = current_sim_time
+                                ah_sig = Signal(
+                                    org_id="",
+                                    ts=current_sim_time,
+                                    modality="video",
+                                    kind="unexplained_presence",
+                                    zone_id=zone_id,
+                                    camera_id=camera_id,
+                                    score=0.60,
+                                    threshold=0.50,
+                                    details={
+                                        "track_id": tid,
+                                        "flagged_track_ids": [tid],
+                                        "is_curfew": True,
+                                        "door_id": door_line_cfg.get("door_id", "block_b_entry") if door_line_cfg else "block_b_entry",
+                                    },
+                                    source="video_pose",
+                                )
+                                await emit_callback(ah_sig)
 
                     prev_centroids[tid] = curr_centroid
 
@@ -1130,7 +1189,29 @@ class VideoPoseDetector(BaseDetector):
                         "-c:v", "libx264",
                         "-preset", "veryfast",
                         "-pix_fmt", "yuv420p",
+                        "-movflags", "+faststart",
                         str(annotated_output_path),
+                    ], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+                    # Also initialize blurred annotated MP4 under data/evidence/restricted/<id>_annotated_blurred.mp4
+                    res_dir = settings.DATA_DIR / "evidence" / "restricted"
+                    res_dir.mkdir(parents=True, exist_ok=True)
+                    blurred_video_name = annotated_output_path.name.replace("_annotated_skeleton", "").replace("_skeleton", "").replace(".mp4", "") + "_annotated_blurred.mp4"
+                    blurred_output_path = res_dir / blurred_video_name
+
+                    ffmpeg_proc_blurred = subprocess.Popen([
+                        ffmpeg_bin, "-y",
+                        "-f", "rawvideo",
+                        "-vcodec", "rawvideo",
+                        "-s", f"{frame_w}x{frame_h}",
+                        "-pix_fmt", "bgr24",
+                        "-r", "8",
+                        "-i", "-",
+                        "-c:v", "libx264",
+                        "-preset", "veryfast",
+                        "-pix_fmt", "yuv420p",
+                        "-movflags", "+faststart",
+                        str(blurred_output_path),
                     ], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
                 ann_frame = skeleton_img.copy()
@@ -1152,6 +1233,12 @@ class VideoPoseDetector(BaseDetector):
                         ffmpeg_proc.stdin.write(ann_frame.tobytes())
                     except Exception as err:
                         logger.warning(f"Error piping frame to ffmpeg: {err}")
+
+                if ffmpeg_proc_blurred and ffmpeg_proc_blurred.stdin:
+                    try:
+                        ffmpeg_proc_blurred.stdin.write(blurred_img.tobytes())
+                    except Exception as err:
+                        logger.warning(f"Error piping frame to blurred ffmpeg: {err}")
 
             # Report progress if callback supplied
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -1180,6 +1267,13 @@ class VideoPoseDetector(BaseDetector):
                 ffmpeg_proc.wait(timeout=10)
             except Exception as e:
                 logger.warning(f"Error finalizing ffmpeg process: {e}")
+
+        if ffmpeg_proc_blurred and ffmpeg_proc_blurred.stdin:
+            try:
+                ffmpeg_proc_blurred.stdin.close()
+                ffmpeg_proc_blurred.wait(timeout=10)
+            except Exception as e:
+                logger.warning(f"Error finalizing blurred ffmpeg process: {e}")
 
         if progress_callback:
             await progress_callback(95)

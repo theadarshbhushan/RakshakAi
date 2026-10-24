@@ -2,8 +2,8 @@
 Live Camera MJPEG Streaming Router (/api/v1/stream).
 Yields real-time multipart/x-mixed-replace MJPEG video streams from in-memory frame buffer:
 - mode=skeleton (default): Accessible by any authenticated user. Accepts token via query param (?token=...).
-- mode=blurred: Requires an active, unexpired break-glass token scoped to the camera's current incident.
-  Strictly audits all accesses.
+- mode=blurred: Requires default blurred org setting, active emergency context, or break-glass grant.
+- mode=emergency: Requires active emergency intruder reveal grant. Watermarks frames in real-time.
 """
 import asyncio
 from datetime import datetime, timezone
@@ -19,10 +19,13 @@ from app.core.config import settings
 from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.security import decode_access_token, hash_token
 from app.detectors.video_pose import latest_camera_frames
+from app.fusion.corroboration import ensure_utc
 from app.models.incident import Incident
-from app.models.privacy import BreakglassGrant
+from app.models.organization import Organization
+from app.models.privacy import BreakglassGrant, EmergencyReveal
 from app.models.user import User, utc_now
 from app.models.zone import Camera
+from app.privacy.encryption import apply_watermark_to_frame
 from app.repositories.repos import AuditRepository
 
 router = APIRouter(prefix="/stream", tags=["Live Stream"])
@@ -83,14 +86,28 @@ async def authenticate_stream_request(
 async def mjpeg_frame_generator(
     camera_id: str,
     mode: str = "skeleton",
+    viewer_email: str = "",
 ) -> AsyncGenerator[bytes, None]:
     """Yield MJPEG frames separated by boundary=frame at ~10 FPS."""
     while True:
         cam_data = latest_camera_frames.get(camera_id, {})
-        frame_bytes = cam_data.get(mode)
+        lookup_mode = "blurred" if mode == "emergency" else mode
+        frame_bytes = cam_data.get(lookup_mode)
 
         if not frame_bytes:
             frame_bytes = get_placeholder_frame(f"Waiting for {camera_id}...")
+        elif mode == "emergency":
+            # Overlay forensic watermark in real-time
+            try:
+                img_arr = np.frombuffer(frame_bytes, np.uint8)
+                frame = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+                if frame is not None:
+                    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    frame = apply_watermark_to_frame(frame, viewer_email, now_str, "EMERGENCY ACCESS - RakshakAI")
+                    _, out_jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                    frame_bytes = out_jpg.tobytes()
+            except Exception:
+                pass
 
         yield (
             b"--frame\r\n"
@@ -105,7 +122,7 @@ async def mjpeg_frame_generator(
 async def stream_camera(
     camera_id: str,
     request: Request,
-    mode: str = Query("skeleton", description="skeleton | blurred"),
+    mode: str = Query("skeleton", description="skeleton | blurred | emergency"),
     token: Optional[str] = Query(None, description="Access token for <img> tags"),
     bg_token: Optional[str] = Query(None, description="Break-glass token for blurred mode"),
     x_breakglass_token: Optional[str] = Header(None, alias="X-Breakglass-Token"),
@@ -113,26 +130,26 @@ async def stream_camera(
     """
     Live camera MJPEG stream.
     - mode=skeleton: Default privacy-preserving skeleton render. Any authenticated role.
-    - mode=blurred: Face-blurred frame. Requires active break-glass grant for current camera incident.
+    - mode=blurred: Face-blurred frame. Requires default view, active emergency context, or breakglass grant.
+    - mode=emergency: Targeted unblur with watermark. Requires active emergency reveal grant.
     """
     # 1. Authenticate user
     current_user = await authenticate_stream_request(request, token_query=token)
 
-    # 2. If blurred mode, enforce break-glass authorization
+    # Rule: Auditors are restricted to skeleton view only
+    if current_user.role == "auditor" and mode in ("blurred", "emergency"):
+        raise ForbiddenError("Auditors are restricted to skeleton view only.", code="FORBIDDEN")
+
+    # Find camera to resolve its zone
+    cam_doc = await Camera.find_one({"camera_id": camera_id, "org_id": current_user.org_id})
+    zone_id = cam_doc.zone_id if cam_doc else camera_id
+    now = utc_now()
+
+    # 2. If blurred mode, check authorization
     if mode == "blurred":
-        breakglass_val = x_breakglass_token or bg_token
-        if not breakglass_val:
-            raise UnauthorizedError(
-                "Access to face-blurred live stream requires an active break-glass token.",
-                code="AUTH_BREAKGLASS_REQUIRED",
-            )
-
-        token_h = hash_token(breakglass_val)
-        now = utc_now()
-
-        # Find camera to resolve its zone
-        cam_doc = await Camera.find_one({"camera_id": camera_id, "org_id": current_user.org_id})
-        zone_id = cam_doc.zone_id if cam_doc else camera_id
+        org = await Organization.get(PydanticObjectId(current_user.org_id))
+        org_default = org.settings.get("default_evidence_view", "skeleton") if org else "skeleton"
+        is_authorized = (org_default == "blurred" and current_user.role in ("guard", "warden", "admin", "owner"))
 
         # Find current active incident for this camera/zone
         active_incident = await Incident.find_one({
@@ -141,17 +158,43 @@ async def stream_camera(
             "status": {"$in": ["new", "acknowledged", "investigating"]},
         })
 
-        if not active_incident:
-            raise NotFoundError("No active incident exists on this camera to justify break-glass stream access.")
+        if not is_authorized and active_incident:
+            # Check Emergency Context View (C2)
+            safety_kinds = {"fight", "distress_audio", "student_sos", "loitering"}
+            if (active_incident.primary_kind in safety_kinds and
+                    active_incident.severity in ("medium", "high", "critical")):
+                last_ts = ensure_utc(active_incident.updated_ts or active_incident.created_ts)
+                if (now - last_ts).total_seconds() <= 600:
+                    is_authorized = True
 
-        grant = await BreakglassGrant.find_one({
-            "org_id": current_user.org_id,
-            "token_hash": token_h,
-            "incident_id": str(active_incident.id),
-        })
+            # Check break-glass grant
+            if not is_authorized:
+                breakglass_val = x_breakglass_token or bg_token
+                if breakglass_val:
+                    token_h = hash_token(breakglass_val)
+                    grant = await BreakglassGrant.find_one({
+                        "org_id": current_user.org_id,
+                        "token_hash": token_h,
+                        "incident_id": str(active_incident.id),
+                    })
+                    if grant and ensure_utc(grant.expires_at) > now:
+                        is_authorized = True
 
-        if not grant or (grant.expires_at and grant.expires_at.replace(tzinfo=timezone.utc) <= now):
-            raise ForbiddenError("Break-glass token is invalid, expired, or not authorized for this camera incident.")
+                if not is_authorized:
+                    user_grant = await BreakglassGrant.find_one({
+                        "org_id": current_user.org_id,
+                        "incident_id": str(active_incident.id),
+                        "user_id": str(current_user.id),
+                        "expires_at": {"$gt": now},
+                    })
+                    if user_grant:
+                        is_authorized = True
+
+        if not is_authorized:
+            raise ForbiddenError(
+                "Access to face-blurred live stream requires an active break-glass token or active emergency context.",
+                code="BREAKGLASS_REQUIRED",
+            )
 
         # Tamper-evident audit log
         audit_repo = AuditRepository(current_user.org_id)
@@ -159,10 +202,42 @@ async def stream_camera(
             actor={"type": "user", "id": str(current_user.id), "email": current_user.email},
             action="stream.blurred_accessed",
             target=f"camera:{camera_id}",
-            reason=f"Break-glass live feed accessed for active incident {active_incident.id}.",
+            reason=f"Face-blurred live feed accessed for camera {camera_id}.",
+        )
+
+    # 3. If emergency mode, enforce active emergency reveal grant
+    elif mode == "emergency":
+        active_incident = await Incident.find_one({
+            "org_id": current_user.org_id,
+            "zone_id": zone_id,
+            "status": {"$in": ["new", "acknowledged", "investigating"]},
+        })
+        if not active_incident:
+            raise ForbiddenError(
+                "No active incident in camera zone for emergency stream.",
+                code="EMERGENCY_REVEAL_NOT_ELIGIBLE",
+            )
+
+        reveal = await EmergencyReveal.find_one({
+            "org_id": current_user.org_id,
+            "incident_id": str(active_incident.id),
+            "expires_at": {"$gt": now},
+        })
+        if not reveal:
+            raise ForbiddenError(
+                "Emergency live stream requires an active emergency reveal grant.",
+                code="EMERGENCY_REVEAL_NOT_ELIGIBLE",
+            )
+
+        audit_repo = AuditRepository(current_user.org_id)
+        await audit_repo.record_audit(
+            actor={"type": "user", "id": str(current_user.id), "email": current_user.email},
+            action="stream.emergency_accessed",
+            target=f"camera:{camera_id}",
+            reason=f"Emergency live feed accessed with watermark under active reveal {reveal.id}.",
         )
 
     return StreamingResponse(
-        mjpeg_frame_generator(camera_id, mode=mode),
+        mjpeg_frame_generator(camera_id, mode=mode, viewer_email=current_user.email),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )

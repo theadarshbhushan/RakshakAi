@@ -70,6 +70,15 @@ zones:
       zone_intrusion: 0.50
       distress_audio: 0.35
       fight: 0.65
+  back_wall:
+    name: "Back Wall"
+    type: perimeter
+    allowed_roles: []
+    adjacent_zone_ids: []
+    thresholds:
+      zone_intrusion: 0.50
+      distress_audio: 0.35
+      fight: 0.65
 
 cameras:
   - camera_id: "cam_terrace"
@@ -93,6 +102,11 @@ cameras:
     name: "Corridor 2F South"
     zone_id: "corridor_2f"
     source_path: "mock_rtsp://cameras/corridor_2f/feed.mp4"
+    door_line: null
+  - camera_id: "cam_back_wall"
+    name: "Back Wall Perimeter Camera"
+    zone_id: "back_wall"
+    source_path: "mock_rtsp://cameras/back_wall/feed.mp4"
     door_line: null
 
 tailgating:

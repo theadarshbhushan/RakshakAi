@@ -30,7 +30,8 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
     },
     "warden": {
         "incidents:read", "incidents:ack", "incidents:review", "incidents:escalations",
-        "evidence:read_public", "signals:read",
+        "evidence:breakglass", "evidence:read_public", "evidence:read_restricted",
+        "signals:read",
         "rules:read", "zones:read", "cameras:read", "sites:read", "users:read",
         "scenarios:run", "calibration:read", "calibration:revert",
     },

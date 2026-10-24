@@ -6,12 +6,14 @@ human-readable explanation narratives detailing all corroborating and suppressed
 """
 import logging
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from beanie import PydanticObjectId
 
+from app.core.config import settings
 from app.models.incident import Incident
-from app.models.signal import Signal
+from app.models.signal import AccessEvent, Signal
 from app.models.zone import Zone
 from app.realtime.ws import ws_hub
 
@@ -104,6 +106,28 @@ class FusionEngine:
         if kinds == {"fight"}:
             return "low"
 
+        # Perimeter breach: at least high severity, critical with any second signal
+        has_perimeter = any(s.kind == "zone_intrusion" and s.details.get("subtype") == "perimeter_breach" for s in active_signals)
+        if has_perimeter:
+            if len(active_signals) >= 2 or len(modalities) >= 2:
+                return "critical"
+            return "high"
+
+        # Unswiped entry: high severity during curfew, medium during the day
+        if "unswiped_entry" in kinds:
+            is_curfew = any(s.details.get("is_curfew", False) for s in active_signals if s.kind == "unswiped_entry")
+            if is_curfew or len(active_signals) >= 2:
+                return "high"
+            return "medium"
+
+        # Unexplained presence: low-medium alone, higher when corroborated with loitering, audio, or SOS
+        if "unexplained_presence" in kinds:
+            if "distress_audio" in kinds or "student_sos" in kinds or "fight" in kinds:
+                return "critical"
+            if "loitering" in kinds or len(modalities) >= 2:
+                return "high"
+            return "medium" if composite_score >= 0.5 else "low"
+
         if len(modalities) == 2:
             return "high"
         if len(modalities) <= 1:
@@ -160,14 +184,58 @@ class FusionEngine:
                         f"corroborated by distress audio ({sound_label} {s.score:.2f}){diff_text}"
                     )
             elif s.kind == "zone_intrusion":
-                if idx == 0:
-                    narrative_parts.append(
-                        f"Person entered zone '{zone_name}' at {t_str} (score {s.score:.2f} vs threshold {s.threshold:.2f})"
-                    )
+                is_perimeter = (s.details.get("subtype") == "perimeter_breach")
+                explained = s.details.get("explained_by_access")
+                role = s.details.get("role")
+                swipe_id = s.details.get("swipe_id")
+
+                if is_perimeter:
+                    prefix = f"Perimeter breach detected at '{zone_name}' at {t_str}"
+                    explain_note = "Always unexplained; restricted perimeter barrier crossed."
+                    if idx == 0:
+                        narrative_parts.append(f"{prefix}. {explain_note}")
+                    else:
+                        narrative_parts.append(f"corroborated by perimeter breach at '{zone_name}'{diff_text}. {explain_note}")
+                elif explained is True:
+                    swipe_str = f" #{swipe_id}" if swipe_id else ""
+                    role_str = f" by {role}" if role else ""
+                    if idx == 0:
+                        narrative_parts.append(
+                            f"Entry matches authorised swipe{role_str}{swipe_str} at {t_str}."
+                        )
+                    else:
+                        narrative_parts.append(
+                            f"corroborated by authorised entry (matches swipe{role_str}{swipe_str}){diff_text}."
+                        )
+                elif explained is False:
+                    if idx == 0:
+                        narrative_parts.append(
+                            f"Person entered zone '{zone_name}' at {t_str} (score {s.score:.2f} vs threshold {s.threshold:.2f}). No authorised swipe explains this entry."
+                        )
+                    else:
+                        narrative_parts.append(
+                            f"corroborated by person entering zone '{zone_name}' (score {s.score:.2f}){diff_text}. No authorised swipe explains this entry."
+                        )
                 else:
-                    narrative_parts.append(
-                        f"corroborated by person entering zone '{zone_name}' (score {s.score:.2f}){diff_text}"
-                    )
+                    if idx == 0:
+                        narrative_parts.append(
+                            f"Person entered zone '{zone_name}' at {t_str} (score {s.score:.2f} vs threshold {s.threshold:.2f})"
+                        )
+                    else:
+                        narrative_parts.append(
+                            f"corroborated by person entering zone '{zone_name}' (score {s.score:.2f}){diff_text}"
+                        )
+            elif s.kind == "unswiped_entry":
+                door = s.details.get("door_id", "entry")
+                p_cnt = s.details.get("people_count", 1)
+                narrative_parts.append(
+                    f"Access violation: unswiped entry detected at {door} at {t_str} ({p_cnt} person crossed with zero swipes)."
+                )
+            elif s.kind == "unexplained_presence":
+                door = s.details.get("door_id", "block door")
+                narrative_parts.append(
+                    f"Unexplained presence: person detected in '{zone_name}' during curfew hours at {t_str} with no granted swipe at {door} in the last 30 minutes."
+                )
             elif s.kind == "fight":
                 if idx == 0:
                     if len(active_signals) == 1 or kinds == {"fight"}:
@@ -322,6 +390,43 @@ class FusionEngine:
 
         sig_utc = ensure_utc(signal.ts)
 
+        # Ensure flagged_track_ids is recorded on the signal
+        if "track_id" in signal.details and "flagged_track_ids" not in signal.details:
+            signal.details["flagged_track_ids"] = [signal.details["track_id"]]
+
+        # D1 & D2: Check perimeter breach and explained vs unexplained access for zone_intrusion
+        if signal.kind == "zone_intrusion":
+            if zone_doc and zone_doc.type == "perimeter":
+                signal.details["subtype"] = "perimeter_breach"
+                signal.details["explained_by_access"] = False
+                signal.score = min(1.0, signal.score + 0.2)
+                await signal.save()
+            elif zone_doc and zone_doc.type == "restricted" and "explained_by_access" not in signal.details:
+                t_window_start = sig_utc - timedelta(seconds=60)
+                t_window_end = sig_utc + timedelta(seconds=5)
+                recent_swipes = await AccessEvent.find(
+                    AccessEvent.org_id == self.org_id,
+                    AccessEvent.result == "granted",
+                    AccessEvent.direction == "in",
+                    AccessEvent.ts >= t_window_start,
+                    AccessEvent.ts <= t_window_end,
+                ).to_list()
+
+                matching_swipe = None
+                for sw in recent_swipes:
+                    if sw.role in (zone_doc.allowed_roles or []):
+                        matching_swipe = sw
+                        break
+
+                if matching_swipe:
+                    signal.details["explained_by_access"] = True
+                    signal.details["swipe_id"] = matching_swipe.pseudo_id
+                    signal.details["role"] = matching_swipe.role
+                    signal.score = round(signal.score * 0.5, 3)
+                else:
+                    signal.details["explained_by_access"] = False
+                await signal.save()
+
         # Look for open incidents in the organization
         open_incidents = await Incident.find(
             Incident.org_id == self.org_id,
@@ -429,5 +534,31 @@ class FusionEngine:
                     "updated_ts": incident.updated_ts.isoformat(),
                 },
             )
+
+        # For video incidents, ensure an encrypted raw clip exists in data/evidence/restricted/raw/<incident_id>.enc
+        if "video" in incident.modalities:
+            try:
+                from app.privacy.encryption import get_raw_clips_dir, save_encrypted_raw_clip
+                raw_dir = get_raw_clips_dir()
+                enc_clip_path = raw_dir / f"{incident.id}.enc"
+                if not enc_clip_path.exists():
+                    source_file = None
+                    if signal.evidence_path:
+                        ev_p = Path(signal.evidence_path)
+                        if not ev_p.is_absolute():
+                            ev_p = settings.DATA_DIR / signal.evidence_path
+                        if ev_p.exists():
+                            source_file = ev_p
+                    if not source_file:
+                        vid_p = settings.DATA_DIR / "videos" / "intrusion" / "intrusion_01.mp4"
+                        if vid_p.exists():
+                            source_file = vid_p
+                    if source_file:
+                        f_tracks = []
+                        if "flagged_track_ids" in signal.details:
+                            f_tracks = [{"track_id": tid, "box": signal.details.get("bounding_box", [100, 100, 200, 300])} for tid in signal.details["flagged_track_ids"]]
+                        save_encrypted_raw_clip(str(incident.id), frame_tracks=[f_tracks], source_file=source_file)
+            except Exception as exc:
+                logger.warning(f"Could not save raw encrypted clip for incident {incident.id}: {exc}")
 
         return incident

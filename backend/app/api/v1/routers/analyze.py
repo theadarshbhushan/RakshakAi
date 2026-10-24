@@ -8,13 +8,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 
+from beanie import PydanticObjectId
 from app.core.config import settings
 from app.core.deps import get_current_user, require_permission
 from app.core.errors import BadRequestError, ForbiddenError, NotFoundError
+from app.core.security import hash_token
+from app.fusion.corroboration import ensure_utc
 from app.models.analysis import AnalysisJob, utc_now
+from app.models.organization import Organization
+from app.models.privacy import BreakglassGrant
 from app.models.user import User
 from app.models.zone import Camera
 from app.repositories.repos import AuditRepository
@@ -189,10 +194,13 @@ async def cancel_job(
 )
 async def get_annotated_video(
     job_id: str,
+    mode: str = Query("skeleton", description="skeleton | blurred"),
+    token: Optional[str] = Query(None, description="Break-glass token"),
+    x_breakglass_token: Optional[str] = Header(None, alias="X-Breakglass-Token"),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Stream or download the privacy-preserving annotated skeleton MP4
+    Stream or download the privacy-preserving annotated skeleton or blurred MP4
     produced for a video analysis job.
     """
     job = await AnalysisJob.find_one(
@@ -202,6 +210,58 @@ async def get_annotated_video(
     if not job:
         raise NotFoundError(f"Analysis job '{job_id}' not found")
 
+    if current_user.role == "auditor" and mode == "blurred":
+        raise ForbiddenError("Auditors are restricted to skeleton view only.")
+
+    if mode == "blurred":
+        org = await Organization.get(PydanticObjectId(current_user.org_id))
+        org_default = org.settings.get("default_evidence_view", "skeleton") if org else "skeleton"
+        is_authorized = (org_default == "blurred" and current_user.role in ("guard", "warden", "admin", "owner"))
+
+        if not is_authorized:
+            now = utc_now()
+            bg_val = x_breakglass_token or token
+            if bg_val:
+                tok_h = hash_token(bg_val)
+                grant = await BreakglassGrant.find_one({
+                    "org_id": current_user.org_id,
+                    "token_hash": tok_h,
+                    "job_id": job_id,
+                })
+                if grant and ensure_utc(grant.expires_at) > now:
+                    is_authorized = True
+
+            if not is_authorized:
+                user_grant = await BreakglassGrant.find_one({
+                    "org_id": current_user.org_id,
+                    "job_id": job_id,
+                    "user_id": str(current_user.id),
+                    "expires_at": {"$gt": now},
+                })
+                if user_grant:
+                    is_authorized = True
+
+        if not is_authorized:
+            raise ForbiddenError(
+                "Access to blurred annotated video requires a break-glass token.",
+                code="BREAKGLASS_REQUIRED",
+            )
+
+        mp4_path = settings.DATA_DIR / "evidence" / "restricted" / f"{job_id}_annotated_blurred.mp4"
+        if not mp4_path.exists():
+            # Fallback to public annotated if blurred was not generated
+            mp4_path = settings.DATA_DIR / "evidence" / "public" / f"{job_id}_annotated.mp4"
+
+        if not mp4_path.exists():
+            raise NotFoundError(f"Blurred annotated output video for job '{job_id}' not found.")
+
+        return FileResponse(
+            path=str(mp4_path),
+            media_type="video/mp4",
+            filename=f"{job_id}_annotated_blurred.mp4",
+        )
+
+    # Default skeleton mode
     mp4_path = settings.DATA_DIR / "evidence" / "public" / f"{job_id}_annotated.mp4"
     if not mp4_path.exists():
         if job.annotated_video_path:

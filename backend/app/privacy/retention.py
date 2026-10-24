@@ -7,7 +7,7 @@ Enforces automatic data minimization:
 - Never auto-deletes confirmed incidents or the audit log.
 """
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -68,6 +68,32 @@ async def execute_retention_purge(user: str = "system", org_id: Optional[str] = 
                 await sig.save()
                 updated_signals_count += 1
 
+        # Purge raw encrypted clips in data/evidence/restricted/raw/
+        raw_dir = settings.DATA_DIR / "evidence" / "restricted" / "raw"
+        retention_days_confirmed = int(org.settings.get("retention_days_confirmed", 30))
+        cutoff_confirmed = utc_now() - timedelta(days=retention_days_confirmed)
+
+        if raw_dir.exists():
+            for enc_file in raw_dir.glob("*.enc"):
+                inc_id = enc_file.stem
+                try:
+                    inc_doc = await Incident.find_one({"_id": __import__("beanie").PydanticObjectId(inc_id), "org_id": oid})
+                except Exception:
+                    inc_doc = await Incident.find_one({"_id": inc_id, "org_id": oid})
+
+                if inc_doc:
+                    is_confirmed = (inc_doc.status == "confirmed")
+                    clip_cutoff = cutoff_confirmed if is_confirmed else cutoff
+                    inc_ts = inc_doc.created_ts
+                    if inc_ts.tzinfo is None:
+                        inc_ts = inc_ts.replace(tzinfo=timezone.utc)
+                    if inc_ts < clip_cutoff:
+                        try:
+                            enc_file.unlink()
+                            deleted_files_count += 1
+                        except Exception as e:
+                            logger.warning(f"Could not purge raw clip {enc_file}: {e}")
+
         total_deleted_files += deleted_files_count
         total_updated_signals += updated_signals_count
 
@@ -76,7 +102,7 @@ async def execute_retention_purge(user: str = "system", org_id: Optional[str] = 
             actor={"type": "user" if user != "scheduler" else "system", "id": user, "email": user},
             action="retention.purge",
             target="evidence_storage",
-            reason=f"Purged {deleted_files_count} files and updated {updated_signals_count} signals older than {retention_days} days.",
+            reason=f"Purged {deleted_files_count} files and updated {updated_signals_count} signals (retention {retention_days}d, confirmed {retention_days_confirmed}d).",
         )
 
     summary = {
