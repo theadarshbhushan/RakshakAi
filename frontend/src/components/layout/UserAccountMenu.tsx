@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ChevronDown, LogOut, ArrowRight, LayoutDashboard, Check } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from 'sonner'
@@ -33,6 +33,11 @@ export interface UserAccountMenuProps {
    */
   stayOnPageAfterSignOut?: boolean
   /**
+   * Optional control to force show or hide "Go to dashboard".
+   * By default, it is shown on "/" (landing page) and hidden on any "/app" dashboard route.
+   */
+  showGoToDashboard?: boolean
+  /**
    * Optional custom class for the outer trigger container.
    */
   className?: string
@@ -41,12 +46,18 @@ export interface UserAccountMenuProps {
 export const UserAccountMenu: React.FC<UserAccountMenuProps> = ({
   stayOnPageAfterSwitch = false,
   stayOnPageAfterSignOut = false,
+  showGoToDashboard,
   className = '',
 }) => {
   const { user, login, logout } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const isInsideApp = location.pathname.startsWith('/app')
+  const shouldShowDashboard =
+    showGoToDashboard !== undefined ? showGoToDashboard : !isInsideApp
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -126,20 +137,22 @@ export const UserAccountMenu: React.FC<UserAccountMenuProps> = ({
             </div>
           </div>
 
-          {/* Go to Dashboard Link */}
-          <div className="p-1 border-b border-border-divider">
-            <Link
-              to="/app"
-              onClick={() => setIsOpen(false)}
-              className="w-full flex items-center justify-between px-2.5 py-2 text-content-primary hover:bg-fill-subtle rounded-btn font-medium text-[13px] transition-colors group"
-            >
-              <span className="flex items-center gap-2">
-                <LayoutDashboard size={15} className="text-primary" />
-                <span>Go to dashboard</span>
-              </span>
-              <ArrowRight size={13} className="text-content-muted group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
+          {/* Go to Dashboard Link (Shown only on landing page / outside dashboard) */}
+          {shouldShowDashboard && (
+            <div className="p-1 border-b border-border-divider">
+              <Link
+                to="/app"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center justify-between px-2.5 py-2 text-content-primary hover:bg-fill-subtle rounded-btn font-medium text-[13px] transition-colors group"
+              >
+                <span className="flex items-center gap-2">
+                  <LayoutDashboard size={15} className="text-primary" />
+                  <span>Go to dashboard</span>
+                </span>
+                <ArrowRight size={13} className="text-content-muted group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          )}
 
           {/* Switch Demo Account Grid */}
           <div className="px-3.5 py-2 border-b border-border-divider">
