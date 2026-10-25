@@ -43,7 +43,19 @@ async def test_login_and_auth_me_returns_role_and_permissions(client: AsyncClien
         json={"email": "owner@sunrise.demo", "password": "WrongPassword123!"},
     )
     assert bad_res.status_code == 401
-    assert "Invalid email or password" in bad_res.json()["error"]["message"]
+    bad_json = bad_res.json()
+    assert bad_json["error"]["code"] == "AUTH_INVALID_CREDENTIALS"
+    assert bad_json["error"]["message"] == "Invalid email or password"
+
+    # Unknown email attempt -> 401 generic (same response, never 500)
+    unknown_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "nonexistent_email_12345@unknownhostel.org", "password": "SomePassword123!"},
+    )
+    assert unknown_res.status_code == 401
+    unknown_json = unknown_res.json()
+    assert unknown_json["error"]["code"] == "AUTH_INVALID_CREDENTIALS"
+    assert unknown_json["error"]["message"] == "Invalid email or password"
 
 
 # =============================================================================

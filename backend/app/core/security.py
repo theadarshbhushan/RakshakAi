@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core.errors import AppError, UnauthorizedError
 
 pwd_hasher = PasswordHash.recommended()
+DUMMY_ARGON2_HASH = "$argon2id$v=19$m=65536,t=3,p=4$JAkJJi8jQXpNVrUc9zWSlw$8TUShC72gCXit/iJ0CfVZOK1c8JtZfkTOLuIxS+tyyo"
 
 COMMON_PASSWORDS = {
     "password", "12345678", "123456789", "1234567890", "password123", "password1",
@@ -56,7 +57,10 @@ def validate_password_strength(password: str) -> None:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify plain password against stored Argon2id hash."""
-    return pwd_hasher.verify(plain_password, hashed_password)
+    try:
+        return pwd_hasher.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 
 def get_password_hash(password: str) -> str:

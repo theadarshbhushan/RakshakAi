@@ -24,6 +24,8 @@ os.environ["RATE_LIMIT_LOGIN"] = "1000/minute"
 if not os.environ.get("MONGODB_URI"):
     os.environ["MONGODB_URI"] = "mongodb://localhost:27017"
 os.environ["USE_MOCK_DB"] = "false"
+if "DETECTOR_MODE" not in os.environ:
+    os.environ["DETECTOR_MODE"] = "mock"
 
 from app.main import app
 from app.db.mongo import init_db, close_db

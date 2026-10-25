@@ -62,7 +62,7 @@ export const TopBar: React.FC<TopBarProps> = ({ wsStatus, onToggleMobileMenu }) 
             className={`w-2.5 h-2.5 rounded-full ${
               wsStatus === 'connected'
                 ? 'bg-status-healthy'
-                : wsStatus === 'connecting'
+                : wsStatus === 'connecting' || wsStatus === 'reconnecting'
                 ? 'bg-status-medium animate-pulse'
                 : 'bg-critical'
             }`}
@@ -71,8 +71,8 @@ export const TopBar: React.FC<TopBarProps> = ({ wsStatus, onToggleMobileMenu }) 
           <span className="hidden sm:inline">
             {wsStatus === 'connected'
               ? 'Live'
-              : wsStatus === 'connecting'
-              ? 'Connecting…'
+              : wsStatus === 'connecting' || wsStatus === 'reconnecting'
+              ? 'Reconnecting…'
               : 'Offline'}
           </span>
         </div>

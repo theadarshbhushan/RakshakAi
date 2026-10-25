@@ -489,10 +489,29 @@ export const api = {
 
   // Evaluation
   eval: {
-    getResults: () => apiFetch<any>('/api/v1/eval/results'),
-    run: () => apiFetch<{ task_id: string; status: string; message: string }>('/api/v1/eval/run', {
-      method: 'POST',
-    }),
+    getResults: (options?: { timeoutMs?: number; signal?: AbortSignal }) => {
+      const timeoutMs = options?.timeoutMs ?? 10000
+      const controller = new AbortController()
+      let timer: any = null
+
+      if (options?.signal) {
+        options.signal.addEventListener('abort', () => controller.abort())
+      }
+
+      timer = setTimeout(() => {
+        controller.abort(new Error('Request timed out after 10 seconds'))
+      }, timeoutMs)
+
+      return apiFetch<any>('/api/v1/eval/results', {
+        signal: controller.signal,
+      }).finally(() => {
+        if (timer) clearTimeout(timer)
+      })
+    },
+    run: () =>
+      apiFetch<{ task_id: string; status: string; message: string }>('/api/v1/eval/run', {
+        method: 'POST',
+      }),
   },
 
   // Audit

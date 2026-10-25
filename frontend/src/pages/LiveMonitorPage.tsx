@@ -51,7 +51,14 @@ export const LiveMonitorPage: React.FC = () => {
     refetchInterval: 10000,
   })
 
-  // Fetch incidents
+  // Fetch open incidents for live status, urgent incident banner, and StatStrip
+  const { data: openIncidentData } = useQuery({
+    queryKey: ['incidents', 'open_live'],
+    queryFn: () => api.incidents.list({ status: 'open', limit: 100 }),
+    refetchInterval: 5000,
+  })
+
+  // Fetch all recent incidents for history
   const { data: incidentData } = useQuery({
     queryKey: ['incidents', 'live'],
     queryFn: () => api.incidents.list({ limit: 50 }),
@@ -112,12 +119,19 @@ export const LiveMonitorPage: React.FC = () => {
     },
   })
 
-  // Check for top unacknowledged high/critical incident
-  const openIncidents = incidentData?.items || []
+  // Open incidents list and severity counts from the same open-incidents query
+  const openIncidents = openIncidentData?.items || []
+  const totalOpen = openIncidentData?.total ?? openIncidents.length
+
+  const openCritical = openIncidents.filter((i) => i.severity === 'critical').length
+  const openHigh = openIncidents.filter((i) => i.severity === 'high').length
+  const openMedium = openIncidents.filter((i) => i.severity === 'medium').length
+  const openLow = openIncidents.filter((i) => i.severity === 'low').length
+
   const urgentIncident = openIncidents.find(
     (inc) =>
       (inc.severity === 'critical' || inc.severity === 'high') &&
-      (!inc.status || inc.status === 'new' || inc.status === 'open')
+      (!inc.status || inc.status === 'new' || inc.status === 'open' || inc.status === 'acknowledged' || inc.status === 'investigating')
   )
 
   const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Warden'
@@ -218,23 +232,28 @@ export const LiveMonitorPage: React.FC = () => {
             label: 'Open incidents',
             value: (
               <div className="flex items-baseline gap-2">
-                <span>{summary?.totals_by_severity?.critical ? '1 critical' : '0 open'}</span>
+                <span>
+                  {totalOpen === 0
+                    ? '0 open'
+                    : openCritical > 0
+                    ? `${openCritical} critical, ${totalOpen} open`
+                    : `${totalOpen} open`}
+                </span>
               </div>
             ),
             meta: (
               <span>
-                {summary?.totals_by_severity?.high || 2} high,{' '}
-                {summary?.totals_by_severity?.medium || 3} medium
+                {openHigh} high, {openMedium} medium
               </span>
             ),
           },
           {
             label: 'Reviewed today',
-            value: `${summary?.status_breakdown?.confirmed || 4} real`,
+            value: `${summary?.status_breakdown?.confirmed || 0} real`,
             meta: (
               <span>
-                {summary?.status_breakdown?.false_alarm || 3} false alarms,{' '}
-                {summary?.status_breakdown?.new || 2} open
+                {summary?.status_breakdown?.false_alarm || 0} false alarms,{' '}
+                {totalOpen} open
               </span>
             ),
           },

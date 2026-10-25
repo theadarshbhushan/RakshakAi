@@ -6,6 +6,7 @@ Enables owner/admin to trigger background re-evaluation runs.
 import asyncio
 import json
 import logging
+from pathlib import Path
 from typing import Any, Dict
 
 from fastapi import APIRouter, BackgroundTasks, Depends
@@ -31,15 +32,25 @@ async def _run_eval_background():
 @router.get("/results", response_model=Dict[str, Any])
 async def get_eval_results():
     """Retrieve evaluation metrics from ml/eval/results/results.json if present, else empty structure."""
-    results_file = settings.EVAL_RESULTS_DIR / "results.json"
-    if not results_file.exists():
-        results_file = settings.EVAL_DIR / "results.json"
-    if results_file.exists():
-        try:
-            with open(results_file, "r", encoding="utf-8") as rf:
-                return json.load(rf)
-        except Exception:
-            pass
+    candidate_paths = [
+        settings.EVAL_RESULTS_DIR / "results.json",
+        settings.PROJECT_ROOT / "ml" / "eval" / "results" / "results.json",
+        settings.EVAL_DIR / "results.json",
+        settings.PROJECT_ROOT / "data" / "eval" / "results.json",
+        Path("ml/eval/results/results.json").resolve(),
+        Path("data/eval/results.json").resolve(),
+        Path("../ml/eval/results/results.json").resolve(),
+        Path("../data/eval/results.json").resolve(),
+    ]
+    for path in candidate_paths:
+        if path.is_file():
+            try:
+                with open(path, "r", encoding="utf-8") as rf:
+                    data = json.load(rf)
+                    if data:
+                        return data
+            except Exception as e:
+                logger.warning(f"Failed to read evaluation results from {path}: {e}")
     return {}
 
 

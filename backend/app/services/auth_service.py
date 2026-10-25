@@ -15,6 +15,7 @@ from beanie import PydanticObjectId
 from app.core.config import settings
 from app.core.errors import ConflictError, UnauthorizedError
 from app.core.security import (
+    DUMMY_ARGON2_HASH,
     create_access_token,
     generate_opaque_token,
     get_password_hash,
@@ -218,7 +219,7 @@ class AuthService:
 
         # Constant-time dummy verify if user does not exist
         if not user or user.deleted_at is not None:
-            verify_password(password, "$argon2id$v=19$m=65536,t=3,p=4$dummyhashdummypassword12345$dummyhash")
+            verify_password(password, DUMMY_ARGON2_HASH)
             raise UnauthorizedError("Invalid email or password", code="AUTH_INVALID_CREDENTIALS")
 
         audit_repo = AuditRepository(user.org_id)

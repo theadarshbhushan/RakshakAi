@@ -7,25 +7,65 @@ import { useAuthStore } from '@/store/authStore'
 import { useSoundStore } from '@/store/soundStore'
 import { cleanExplanation, getIncidentPlainTitle } from '@/utils/incidentHelpers'
 
-export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected'
+export type ConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'disconnected'
 
 export function useWebSocket() {
-  const [status, setStatus] = useState<ConnectionStatus>('disconnected')
+  const [status, setStatus] = useState<ConnectionStatus>('connecting')
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<number | null>(null)
   const pingIntervalRef = useRef<number | null>(null)
-  const retryCountRef = useRef(0)
+  const isConnectingRef = useRef(false)
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
   const { playAlertChime } = useSoundStore()
 
+  const scheduleReconnect = useCallback((delayMs: number = 3000) => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+
+    if (!isAuthenticated) {
+      setStatus('disconnected')
+      return
+    }
+
+    setStatus('reconnecting')
+    reconnectTimeoutRef.current = window.setTimeout(async () => {
+      if (!isAuthenticated) {
+        setStatus('disconnected')
+        return
+      }
+
+      console.log('[WebSocket] Reconnecting: obtaining fresh token...')
+      try {
+        const refreshRes = await api.auth.refresh()
+        if (refreshRes && refreshRes.access_token) {
+          setAccessToken(refreshRes.access_token)
+          console.log('[WebSocket] Successfully acquired fresh token')
+        }
+      } catch (err) {
+        console.warn('[WebSocket] Token refresh failed before reconnect:', err)
+      }
+
+      connect()
+    }, delayMs)
+  }, [isAuthenticated])
+
   const connect = useCallback(async () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      setStatus('disconnected')
+      return
+    }
+
+    if (isConnectingRef.current) return
+    isConnectingRef.current = true
 
     let token = getAccessToken()
     if (!token) {
+      setStatus('reconnecting')
       try {
         const refreshRes = await api.auth.refresh()
         if (refreshRes && refreshRes.access_token) {
@@ -33,34 +73,42 @@ export function useWebSocket() {
           token = refreshRes.access_token
         }
       } catch (err) {
-        console.warn('WS auth refresh failed:', err)
-        return
+        console.warn('[WebSocket] Initial auth refresh failed:', err)
       }
     }
 
-    if (!token) return
+    if (!token) {
+      isConnectingRef.current = false
+      scheduleReconnect(3000)
+      return
+    }
 
-    // Clear existing
+    // Clean up any existing connection
     if (wsRef.current) {
       try {
+        wsRef.current.onopen = null
+        wsRef.current.onmessage = null
+        wsRef.current.onerror = null
+        wsRef.current.onclose = null
         wsRef.current.close()
       } catch {}
       wsRef.current = null
     }
 
-    setStatus('connecting')
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/api/v1/ws?token=${encodeURIComponent(token)}`
 
     try {
+      console.log('[WebSocket] Connecting to', wsUrl.replace(/token=([^&]+)/, 'token=***'))
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 
       ws.onopen = () => {
+        isConnectingRef.current = false
+        console.log('[WebSocket] Connected successfully to /api/v1/ws')
         setStatus('connected')
-        retryCountRef.current = 0
 
-        // Start ping interval
+        // Start ping interval to keep connection alive
         if (pingIntervalRef.current) clearInterval(pingIntervalRef.current)
         pingIntervalRef.current = window.setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
@@ -118,6 +166,7 @@ export function useWebSocket() {
               break
 
             case 'camera_status':
+            case 'camera_health_changed':
             case 'camera_tamper':
               queryClient.invalidateQueries({ queryKey: ['cameras'] })
               if (data?.status === 'tampered' || data?.is_blind_spot) {
@@ -134,6 +183,7 @@ export function useWebSocket() {
               break
 
             case 'privacy_request':
+            case 'identity_reveal.requested':
               queryClient.invalidateQueries({ queryKey: ['approvals'] })
               break
 
@@ -146,50 +196,52 @@ export function useWebSocket() {
         }
       }
 
-      ws.onclose = () => {
-        setStatus('disconnected')
+      ws.onclose = (event) => {
+        isConnectingRef.current = false
+        console.warn(`[WebSocket] Closed: code=${event.code}, reason="${event.reason}"`)
         if (pingIntervalRef.current) clearInterval(pingIntervalRef.current)
 
-        // Exponential backoff reconnect
         if (isAuthenticated) {
-          const timeout = Math.min(1000 * Math.pow(1.5, retryCountRef.current), 10000)
-          retryCountRef.current += 1
-          if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
-          reconnectTimeoutRef.current = window.setTimeout(async () => {
-            try {
-              // Refresh token before reconnecting
-              const res = await api.auth.refresh()
-              if (res?.access_token) {
-                setAccessToken(res.access_token)
-              }
-            } catch (err) {
-              console.warn('WS token refresh error:', err)
-            }
-            connect()
-          }, timeout)
+          scheduleReconnect(3000)
+        } else {
+          setStatus('disconnected')
         }
       }
 
-      ws.onerror = () => {
+      ws.onerror = (error) => {
+        isConnectingRef.current = false
+        console.error('[WebSocket] Error event caught:', error)
         try {
           ws.close()
         } catch {}
       }
-    } catch {
-      setStatus('disconnected')
+    } catch (err) {
+      isConnectingRef.current = false
+      console.error('[WebSocket] Failed to instantiate WebSocket:', err)
+      scheduleReconnect(3000)
     }
-  }, [isAuthenticated, playAlertChime, queryClient, navigate])
+  }, [isAuthenticated, playAlertChime, queryClient, navigate, scheduleReconnect])
 
   useEffect(() => {
     if (isAuthenticated) {
       connect()
     } else {
-      if (wsRef.current) wsRef.current.close()
+      if (wsRef.current) {
+        try {
+          wsRef.current.close()
+        } catch {}
+        wsRef.current = null
+      }
       setStatus('disconnected')
     }
 
     return () => {
-      if (wsRef.current) wsRef.current.close()
+      if (wsRef.current) {
+        try {
+          wsRef.current.close()
+        } catch {}
+        wsRef.current = null
+      }
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
       if (pingIntervalRef.current) clearInterval(pingIntervalRef.current)
     }

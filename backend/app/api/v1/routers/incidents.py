@@ -41,7 +41,12 @@ async def list_incidents(
     """
     query: Dict[str, Any] = {"org_id": current_user.org_id}
     if status:
-        query["status"] = status
+        if status.lower() == "open":
+            query["status"] = {"$in": ["new", "acknowledged", "investigating"]}
+        elif status.lower() == "reviewed":
+            query["status"] = {"$in": ["confirmed", "false_alarm"]}
+        else:
+            query["status"] = status
     if severity:
         query["severity"] = severity
     if zone_id:
