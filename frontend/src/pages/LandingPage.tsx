@@ -51,8 +51,12 @@ export const LandingPage: React.FC = () => {
       ? `${(fusionComparison.video_only.fpr * 100).toFixed(1)}%`
       : '28.6%'
   const audioPrecision =
-    evalResults?.tasks?.audio_distress?.precision !== undefined
-      ? Number(evalResults.tasks.audio_distress.precision).toFixed(2)
+    (evalResults?.tasks?.audio_distress?.metrics?.precision ??
+      evalResults?.tasks?.audio_distress?.precision) !== undefined
+      ? Number(
+          evalResults?.tasks?.audio_distress?.metrics?.precision ??
+            evalResults?.tasks?.audio_distress?.precision
+        ).toFixed(2)
       : '1.00'
 
   return (
@@ -213,11 +217,6 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Column: Headline and CTAs */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary-tint/30 border border-primary/20 text-[12px] font-medium text-primary">
-              <ShieldCheck size={14} />
-              <span>Multi-modal hostel safety · AI/ML Hackathon PS 2</span>
-            </div>
-
             <h1 className="text-[34px] sm:text-[42px] lg:text-[46px] font-bold text-content-primary leading-[1.18] tracking-tight">
               Hostel safety that students can trust.
             </h1>
@@ -248,14 +247,14 @@ export const LandingPage: React.FC = () => {
               </a>
             </div>
 
-            <div className="pt-4 flex items-center gap-6 text-[12px] text-content-muted font-mono">
+            <div className="pt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px] text-content-secondary">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-status-healthy" />
-                Zero biometric facial profiling
+                <CheckCircle2 size={15} className="text-status-healthy shrink-0" />
+                No face recognition
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-status-healthy" />
-                78% fewer nuisance alarms
+                <CheckCircle2 size={15} className="text-status-healthy shrink-0" />
+                0% false alarms with fusion (vs 43% audio-only) in scenario tests
               </span>
             </div>
           </div>
@@ -290,14 +289,14 @@ export const LandingPage: React.FC = () => {
                   </div>
 
                   <p className="text-[12px] font-medium text-content-primary leading-snug">
-                    Curfew breach corroborated by distress audio and door swipe without matching exit.
+                    Someone entered the terrace after curfew, and a scream was heard
                   </p>
 
                   <div className="flex items-center justify-between pt-1 border-t border-critical/15 text-[11px]">
-                    <span className="font-mono text-critical font-medium">
-                      Camera + audio + door agree
+                    <span className="text-critical font-medium">
+                      Camera, microphone and door log all agree
                     </span>
-                    <span className="text-content-muted text-[10px]">Guard alerted in 13 s</span>
+                    <span className="text-content-muted text-[10px]">Warden alerted in 39 s</span>
                   </div>
                 </div>
 
@@ -514,7 +513,7 @@ export const LandingPage: React.FC = () => {
                 Three-stage audio filter
               </h3>
               <p className="text-[13px] text-content-secondary leading-relaxed">
-                Trained on over 5,000 acoustic samples to ignore laughter, hallway chatter, and sports celebrations while reliably picking up genuine distress screams.
+                Evaluated against challenging acoustic negatives to ignore laughter, hallway chatter, and sports celebrations while reliably picking up genuine distress screams.
               </p>
             </div>
 
@@ -692,7 +691,7 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 rounded-[12px] bg-page border border-border-card space-y-2">
               <div className="text-[38px] font-bold text-primary font-mono leading-none">
                 {fusedFpr}
@@ -701,7 +700,7 @@ export const LandingPage: React.FC = () => {
                 Fused false-positive rate
               </div>
               <p className="text-[12px] text-content-muted leading-snug">
-                vs {audioFpr} audio-only and {videoFpr} video-only in scenario benchmark runs.
+                vs {audioFpr} audio-only and {videoFpr} video-only in benchmark scenario runs.
               </p>
             </div>
 
@@ -719,25 +718,13 @@ export const LandingPage: React.FC = () => {
 
             <div className="p-6 rounded-[12px] bg-page border border-border-card space-y-2">
               <div className="text-[38px] font-bold text-primary font-mono leading-none">
-                78%
+                52
               </div>
               <div className="text-[14px] font-semibold text-content-primary">
-                Nuisance alarm reduction
+                Backend test suite
               </div>
               <p className="text-[12px] text-content-muted leading-snug">
-                Uncorroborated single-camera and single-audio anomalies are suppressed automatically.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-[12px] bg-page border border-border-card space-y-2">
-              <div className="text-[38px] font-bold text-primary font-mono leading-none">
-                &lt; 15 s
-              </div>
-              <div className="text-[14px] font-semibold text-content-primary">
-                Corroboration window
-              </div>
-              <p className="text-[12px] text-content-muted leading-snug">
-                Fast multi-sensor corroboration allows rapid guard dispatch during true emergencies.
+                Automated tests verifying multi-sensor fusion, SLA escalation, and tiered privacy.
               </p>
             </div>
           </div>
